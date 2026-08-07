@@ -105,10 +105,13 @@ const router = createBrowserRouter([
     // src/index.css `.citizen-scope`. Kept off the agent back-office, which
     // still renders through `AppShell` below.
     element: <CitizenAppShell variant="minimal" />,
-    children: [
-      { path: ROUTES.administrations, element: <AdministrationsPage /> },
-      { path: ROUTES.portal, element: <CitizenDashboardPage /> },
-    ],
+    children: [{ path: ROUTES.portal, element: <CitizenDashboardPage /> }],
+  },
+  {
+    // Même coque, mais coiffée de l'en-tête public : la liste des
+    // administrations se parcourt sans compte et prolonge la page d'accueil.
+    element: <CitizenAppShell variant="landing" />,
+    children: [{ path: ROUTES.administrations, element: <AdministrationsPage /> }],
   },
   {
     // Authenticated citizen area.

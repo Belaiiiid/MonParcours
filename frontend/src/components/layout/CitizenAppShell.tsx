@@ -9,6 +9,7 @@ import { SkipLink } from '@/components/layout/SkipLink';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FloatingActionBubbles } from '@/features/chatbot/components/FloatingActionBubbles';
 import { FloatingChatbot } from '@/features/chatbot/components/FloatingChatbot';
+import { LandingHeader } from '@/features/chatbot/components/landing/LandingHeader';
 import { VoiceAssistantProvider } from '@/features/voice/components/VoiceAssistantProvider';
 import { VoicePageProvider } from '@/features/voice/context/VoicePageContext';
 import { cn } from '@/lib/utils';
@@ -22,15 +23,25 @@ import { cn } from '@/lib/utils';
  * back-office shell, which still uses `AppShell` for its own routes, is
  * never affected by this redesign.
  *
- * `variant="minimal"` drops the header and sidebar, for the administrations
- * list and the CAF services hub, reached before any account is required —
- * mirrors `AppShell`'s `hideSidebar`/`hideHeader` props.
+ * `variant="minimal"` drops the sidebar, for the CAF services hub, reached
+ * before any account is required — mirrors `AppShell`'s `hideSidebar`/
+ * `hideHeader` props.
+ *
+ * `variant="landing"` fait la même chose mais coiffe la page de l'en-tête
+ * public (`LandingHeader`) : la liste des administrations se parcourt sans
+ * compte, elle prolonge la page d'accueil plutôt que l'espace connecté, et
+ * changer de barre entre les deux se lisait comme un changement de site.
  */
-export function CitizenAppShell({ variant = 'full' }: { variant?: 'full' | 'minimal' }) {
+export function CitizenAppShell({
+  variant = 'full',
+}: {
+  variant?: 'full' | 'minimal' | 'landing';
+}) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const hideChrome = variant === 'minimal';
+  const isLanding = variant === 'landing';
+  const hideChrome = variant === 'minimal' || isLanding;
   /*
    * L'assistant est une surface de conversation, pas un document : la page y
    * tient exactement dans l'écran, et le seul ascenseur est celui du fil de
@@ -78,10 +89,14 @@ export function CitizenAppShell({ variant = 'full' }: { variant?: 'full' | 'mini
               !hideChrome && 'lg:pl-sidebar',
             )}
           >
-            <CitizenHeader
-              variant={hideChrome ? 'minimal' : 'full'}
-              onOpenMenu={() => setIsDrawerOpen(true)}
-            />
+            {isLanding ? (
+              <LandingHeader />
+            ) : (
+              <CitizenHeader
+                variant={hideChrome ? 'minimal' : 'full'}
+                onOpenMenu={() => setIsDrawerOpen(true)}
+              />
+            )}
             <main
               id="main-content"
               tabIndex={-1}

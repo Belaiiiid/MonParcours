@@ -154,7 +154,7 @@ export function CitizenFooter({ className }: { className?: string }) {
               <img
                 src="https://digital-strategy.ec.europa.eu/sites/default/files/2026-06/AI%20LABELS_3x2_AI%20GENERATED_black.png?destination=/media/10207/edit"
                 alt="Contenu généré par l'IA — icône officielle de l'UE"
-                className="ml-1 h-7 w-auto rounded-md bg-white px-1.5 py-0.5"
+                className="ml-1 h-12 w-auto rounded-md  px-1.5 py-0.5"
                 loading="lazy"
               />
             </p>

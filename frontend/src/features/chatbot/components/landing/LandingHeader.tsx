@@ -9,11 +9,17 @@ import logo from '@/assets/administral-logo.png';
 const SCROLLED_LOGO = '/erasebg-transformed.png';
 import { cn } from '@/lib/utils';
 
+/**
+ * Ancres préfixées par `/` : cette barre coiffe aussi `/administrations` (voir
+ * `CitizenAppShell`, variante `landing`), où ces sections n'existent pas. Un
+ * `#services` nu n'y mènerait nulle part ; `/#services` ramène à l'accueil, à
+ * la bonne section, et se comporte exactement pareil depuis l'accueil.
+ */
 const NAV_LINKS = [
-  { href: '#services', label: 'Services' },
-  { href: '#fonctionnalites', label: 'Fonctionnalités' },
-  { href: '#ia', label: 'IA générative' },
-  { href: '#aide', label: 'Aide' },
+  { href: '/#services', label: 'Services' },
+  { href: '/#fonctionnalites', label: 'Fonctionnalités' },
+  { href: '/#ia', label: 'IA générative' },
+  { href: '/#aide', label: 'Aide' },
 ] as const;
 
 /**
