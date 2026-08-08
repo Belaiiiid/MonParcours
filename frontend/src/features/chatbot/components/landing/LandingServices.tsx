@@ -63,9 +63,7 @@ export function LandingServices() {
             aria-label="Services principaux"
             className="mx-auto max-w-6xl"
           >
-            {/* `group/cards` lets a hovered card dim its siblings — the highlight
-                reads as "this one" rather than just "something moved". */}
-            <CarouselContent className="group/cards -ml-6 py-2">
+            <CarouselContent className="-ml-6 py-2">
               {SERVICES.map((service, index) => (
                 <CarouselItem
                   key={service.id}

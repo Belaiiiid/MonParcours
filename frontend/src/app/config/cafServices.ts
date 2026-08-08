@@ -27,13 +27,13 @@ export interface CafServiceDefinition {
 export const CAF_SERVICES: CafServiceDefinition[] = [
   {
     id: 'apl',
-    name: 'APL à l’Aide',
+    name: 'Aide aux APL',
     fullName: 'APL — Aide Personnalisée au Logement',
     description:
       'Aide au paiement du loyer, versée sous conditions de ressources pour un logement conventionné. Ici : simulez vos droits et déposez votre dossier.',
     basePath: ROUTES.dossier,
     status: 'available',
-    photoUrl: '/caf-services/apl.svg',
+    photoUrl: '/guy2.png',
   },
   {
     id: 'af',

@@ -83,7 +83,9 @@ const SIZES: Record<ServiceCardSize, SizeTokens> = {
     logo: 'max-h-28 max-w-[70%]',
   },
   compact: {
-    panel: 'h-36',
+    // La vignette porte l'identité du service : elle gagne la hauteur, le reste
+    // de la carte est inchangé.
+    panel: 'h-48',
     badge: 'size-12',
     badgeIcon: 'size-5',
     body: 'p-5 pt-7',
@@ -147,10 +149,10 @@ export function ServiceCard({
       className={cn(
         'group/card relative flex h-full flex-col overflow-hidden rounded-sm border-2 border-border/60 bg-card shadow-soft',
         'transition-all duration-300 ease-out',
-        // Siblings recede while any card in the group is hovered…
-        'group-hover/cards:scale-[0.97] group-hover/cards:opacity-50',
-        // …and the hovered one wins both back, plus a brand border.
-        'hover:!scale-[1.03] hover:!opacity-100 hover:border-brand hover:shadow-soft-hover hover:shadow-brand/10',
+        // La carte survolée avance ; ses voisines ne bougent plus. Elles
+        // s'effaçaient auparavant (`group-hover/cards`), ce qui faisait
+        // clignoter toute la grille au moindre passage de souris.
+        'hover:scale-[1.03] hover:border-brand hover:shadow-soft-hover hover:shadow-brand/10',
         // Keyboard parity: the CTA is the focus target, so the card reacts to
         // focus *within* it rather than only to a mouse.
         'focus-within:border-brand focus-within:shadow-soft',
@@ -240,7 +242,11 @@ export function ServiceCard({
               className={cn(
                 'inline-flex items-center justify-center gap-2 rounded-sm bg-brand font-semibold text-white shadow-soft',
                 CTA_WIDTHS[size],
-                'transition-colors duration-200 hover:bg-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
+                // `#102a74` et non `ink` : la zone de clic du bouton couvre
+                // toute la carte (`after:inset-0`), donc survoler la carte
+                // survole le bouton. Le presque-noir d'`ink` faisait virer le
+                // bouton au sombre au moindre passage de souris.
+                'transition-colors duration-200 hover:bg-[#102a74] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
                 // Stretches the hit area over the whole card — see the component note.
                 'after:absolute after:inset-0 after:content-[""]',
                 s.cta,

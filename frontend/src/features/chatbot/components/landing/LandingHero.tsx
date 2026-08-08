@@ -56,8 +56,8 @@ export function LandingHero({ onStart }: LandingHeroProps) {
               the photo, where the muted grey lost too much contrast. */}
           <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-ink/85 text-justify">
             Administral centralise vos démarches administratives au sein d’un espace unique. Accédez
-            facilement aux services de la CAF, de l’APL, de France Travail et à de nombreux autres
-            services publics, avec un accompagnement intelligent disponible partout et à tout moment.
+            facilement aux services de la CAF, de France Travail et à de nombreux autres services
+            publics, avec un accompagnement intelligent disponible partout et à tout moment.
           </p>
           <div className="mt-9 flex flex-wrap gap-4">
             <button

@@ -23,7 +23,7 @@ interface ChannelCardProps {
 }
 
 const CARD_CLASS =
-  'group flex h-full w-full flex-col items-start rounded-sm border border-border/60 bg-card p-8 text-left shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-brand/40 hover:shadow-soft-hover hover:shadow-brand/10';
+  'group flex h-full w-full flex-col items-center rounded-sm border border-border/60 bg-card p-8 text-center shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-brand/40 hover:shadow-soft-hover hover:shadow-brand/10';
 
 function CardBody({ icon: Icon, imageSrc, chipClass, title, text, meta, cta }: ChannelCardProps) {
   return (
