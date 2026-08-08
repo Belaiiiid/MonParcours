@@ -1,15 +1,4 @@
-import {
-  ArrowRight,
-  Banknote,
-  Building2,
-  FileText,
-  FolderClock,
-  Home,
-  LogIn,
-  MessagesSquare,
-  Upload,
-  Users,
-} from 'lucide-react';
+import { Banknote, Building2, Home, LogIn, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -31,48 +20,12 @@ const CAF_SERVICE_ICONS: Record<CafServiceId, LucideIcon> = {
   'prime-activite': Banknote,
 };
 
-/** Badge accent per service — mirrors the artwork in `public/caf-services/`. */
-const CAF_SERVICE_BADGE: Record<CafServiceId, string> = {
-  apl: 'bg-brand',
-  af: 'bg-secondary',
-  alf: 'bg-chart-3',
-  'prime-activite': 'bg-success',
-};
-
-interface QuickAction {
-  icon: LucideIcon;
-  label: string;
-  hint: string;
-  to: string;
-}
-
 /**
- * What a signed-in citizen actually comes back to do. Replaces the band of
- * invented counters ("12 400+ citoyens accompagnés") that used to sit here:
- * nothing computed them, and fabricated numbers have no place on a page that
- * speaks for a public administration.
+ * Toutes les pastilles au bleu de marque : une couleur par service donnait à
+ * lire une catégorie qui n'existe pas — ce sont quatre aides de la même caisse,
+ * pas quatre familles de services.
  */
-const QUICK_ACTIONS: QuickAction[] = [
-  {
-    icon: Upload,
-    label: 'Déposer un dossier',
-    hint: 'Checklist des pièces et dépôt',
-    to: ROUTES.dossier,
-  },
-  {
-    icon: FolderClock,
-    label: 'Suivre mon dossier',
-    hint: 'Où en est l’instruction',
-    to: ROUTES.suivi,
-  },
-  { icon: FileText, label: 'Mes documents', hint: 'Pièces déjà transmises', to: ROUTES.documents },
-  {
-    icon: MessagesSquare,
-    label: 'Poser une question',
-    hint: 'Assistant disponible 24h/24',
-    to: ROUTES.chat,
-  },
-];
+const CAF_SERVICE_BADGE = 'bg-brand';
 
 /**
  * "Mes services" — CAF's own services, reached once CAF has been chosen on
@@ -122,53 +75,39 @@ export default function CitizenDashboardPage() {
         }
       />
 
-      {/* Which administration you are inside. `/portal` is reachable straight
-          from a bookmark, where "Mes services" alone says nothing about whose. */}
+      {/* Bandeau de passage : il dit qu'on vient de quitter Administral pour
+          entrer chez la CAF. `/portal` s'ouvre aussi depuis un signet, où
+          « Mes services » seul ne dit pas les services de qui. */}
       {caf && (
-        <div className="mb-10 flex items-center gap-4 rounded-sm border border-border/60 bg-card p-5 shadow-soft">
-          <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-border/60 bg-surface-lowest p-1.5">
-            <img src={caf.logoUrl} alt="" aria-hidden="true" className="size-full object-contain" />
+        <div className="relative mb-10 flex items-center gap-4 overflow-hidden rounded-[14px] bg-[linear-gradient(120deg,#14265e,#1e3a8a)] p-5 text-white">
+          {/* Cercle décoratif, débordant du coin haut-droit. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-white/10"
+          />
+
+          <span className="relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-white font-display text-sm font-extrabold text-[#1e3a8a] shadow-soft">
+            CAF
           </span>
-          <div className="min-w-0">
-            <p className="font-display text-lg font-extrabold text-ink">{caf.fullName}</p>
-            <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
-              {caf.description}
+
+          <div className="relative min-w-0">
+            <p className="text-base font-bold leading-snug">
+              Vous accédez aux services de la Caisse d’Allocations Familiales
+            </p>
+            <p className="mt-0.5 text-[13px] leading-relaxed text-white/85">
+              Aides au logement, à la famille et à la solidarité — via Administral
             </p>
           </div>
+
+          {/* Masquée sous 640px : la ligne y passerait sous le texte et ferait
+              grandir le bandeau pour une mention accessoire. */}
+          <span className="relative ml-auto hidden shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white sm:inline-flex">
+            🔒 Connexion sécurisée
+          </span>
         </div>
       )}
 
-      {isAuthenticated ? (
-        <>
-          <h2 className="mb-4 font-display text-lg font-extrabold text-ink">Accès rapide</h2>
-          <ul className="mb-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {QUICK_ACTIONS.map((action) => (
-              <li key={action.to}>
-                <Link
-                  to={action.to}
-                  className="group flex h-full items-center gap-4 rounded-sm border border-border/60 bg-card p-5 shadow-soft transition-all duration-300 hover:border-brand hover:shadow-soft-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                >
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-sm bg-brand-soft text-brand transition-colors duration-300 group-hover:bg-brand group-hover:text-white">
-                    <action.icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-display text-label-md text-ink">
-                      {action.label}
-                    </span>
-                    <span className="block text-xs leading-relaxed text-muted-foreground">
-                      {action.hint}
-                    </span>
-                  </span>
-                  <ArrowRight
-                    className="size-4 shrink-0 text-brand transition-transform duration-300 group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
+      {!isAuthenticated && (
         // Anonymous visitors get the one thing that unlocks the rest, instead of
         // shortcuts to pages that would bounce them straight to the sign-in form.
         <div className="mb-14 flex flex-col gap-4 rounded-sm border border-border/60 bg-brand-soft p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -191,36 +130,43 @@ export default function CitizenDashboardPage() {
         </div>
       )}
 
-      <h2 className="mb-2 font-display text-headline-lg-mobile leading-tight text-ink">
-        Les services CAF
-      </h2>
-      <p className="mb-8 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-        Chaque service a ses propres conditions et ses propres pièces justificatives. Ouvrez celui
-        qui vous concerne : l’assistant vous guide ensuite pas à pas.
-      </p>
+      {/* Les services sur leur propre fond : la bande les détache de l'accès
+          rapide au-dessus, qui n'est pas de la même nature. */}
+      <section className="rounded-2xl bg-[#f6fbff] p-6 sm:p-8">
+        {/* Même gabarit que « Services principaux » sur l'accueil : eyebrow,
+            titre centré en grand, puis une ligne d'explication. */}
+        <div className="mx-auto mb-12 max-w-3xl text-center">
+          <p className="eyebrow text-base">Services CAF</p>
+          <h2 className="mt-4 text-4xl font-extrabold leading-tight text-ink">
+            Les aides de la Caisse d’Allocations Familiales
+          </h2>
+          <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+            Chaque service a ses propres conditions et ses propres pièces justificatives. Ouvrez
+            celui qui vous concerne : l’assistant vous guide ensuite pas à pas.
+          </p>
+        </div>
 
-      {/* `group/cards` powers the "hovered card steps forward, its siblings
-          recede" behaviour shared with `/administrations` — see `ServiceCard`. */}
-      <ul className="group/cards grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {CAF_SERVICES.map((service) => (
-          <li key={service.id}>
-            <ServiceCard
-              size="compact"
-              name={service.name}
-              fullName={service.fullName}
-              description={service.description}
-              // APL is the one live service; without a session it leads to the
-              // public assistant rather than a dossier the visitor cannot open.
-              to={service.id === 'apl' && !isAuthenticated ? ROUTES.home : service.basePath}
-              available={service.status === 'available'}
-              icon={CAF_SERVICE_ICONS[service.id]}
-              badgeClassName={CAF_SERVICE_BADGE[service.id]}
-              imageUrl={service.photoUrl}
-              ctaLabel="Ouvrir le service"
-            />
-          </li>
-        ))}
-      </ul>
+        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {CAF_SERVICES.map((service) => (
+            <li key={service.id}>
+              <ServiceCard
+                size="compact"
+                name={service.name}
+                fullName={service.fullName}
+                description={service.description}
+                // APL is the one live service; without a session it leads to the
+                // public assistant rather than a dossier the visitor cannot open.
+                to={service.id === 'apl' && !isAuthenticated ? ROUTES.home : service.basePath}
+                available={service.status === 'available'}
+                icon={CAF_SERVICE_ICONS[service.id]}
+                badgeClassName={CAF_SERVICE_BADGE}
+                imageUrl={service.photoUrl}
+                ctaLabel="Ouvrir le service"
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

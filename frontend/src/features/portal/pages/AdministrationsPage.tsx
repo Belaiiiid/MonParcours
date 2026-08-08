@@ -1,9 +1,10 @@
+import { Landmark } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { SERVICES } from '@/app/config/services';
-import { ROUTES } from '@/app/router/paths';
-import { CitizenPageHeader } from '@/components/citizen/CitizenPageHeader';
 import { AdministrationCard } from '@/components/citizen/ServiceCard';
+import { AdministrationsHero } from '@/features/portal/components/AdministrationsHero';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useVoicePage } from '@/features/voice/context/VoicePageContext';
 import type { VoicePageAction } from '@/features/voice/types';
@@ -18,6 +19,20 @@ import type { VoicePageAction } from '@/features/voice/types';
 export default function AdministrationsPage() {
   useDocumentTitle('Administrations');
   const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+
+  /* La recherche du bandeau filtre la grille : nom, intitulé complet et
+     organisme, ce sous quoi une administration est cherchée. */
+  const visibleServices = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return SERVICES;
+    return SERVICES.filter((service) =>
+      [service.name, service.fullName, service.administration]
+        .join(' ')
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [query]);
 
   const availableServices = SERVICES.filter((service) => service.status === 'available');
   const availableActions: VoicePageAction[] = availableServices.map((service) => ({
@@ -36,23 +51,31 @@ export default function AdministrationsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl">
-      <CitizenPageHeader
-        backTo={ROUTES.home}
-        eyebrow="Bienvenue sur Administral"
-        title="Choisissez une administration"
-        description="Sélectionnez l’administration avec laquelle vous souhaitez interagir. D’autres seront progressivement disponibles."
-      />
+    <>
+      <AdministrationsHero query={query} onQueryChange={setQuery} />
 
-      {/* `group/cards` powers the same "hovered card steps forward, its siblings
-          recede" behaviour as the landing carousel — see `ServiceCard`. */}
-      <ul className="group/cards grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {SERVICES.map((service) => (
-          <li key={service.id}>
-            <AdministrationCard service={service} size="compact" />
-          </li>
-        ))}
-      </ul>
-    </div>
+      {/* `pb-20` : la grille ne touche plus le pied de page, elle a la place de
+          se terminer avant que le bandeau bleu commence. */}
+      <div className="mx-auto mt-12 max-w-7xl pb-20">
+        <h2 className="mb-8 flex items-center gap-3 font-display text-xl font-extrabold text-ink">
+          <Landmark className="size-6 text-brand" aria-hidden="true" />
+          Toutes les administrations
+        </h2>
+
+        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {visibleServices.map((service) => (
+            <li key={service.id}>
+              <AdministrationCard service={service} size="compact" />
+            </li>
+          ))}
+        </ul>
+
+        {visibleServices.length === 0 && (
+          <p className="rounded-xl border border-dashed border-brand/30 bg-brand-soft/40 px-6 py-10 text-center text-sm text-muted-foreground">
+            Aucune administration ne correspond à « {query.trim()} ».
+          </p>
+        )}
+      </div>
+    </>
   );
 }
