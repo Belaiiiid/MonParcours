@@ -59,7 +59,7 @@ export function Sidebar({ inDrawer = false }: { inDrawer?: boolean }) {
           fermeture reste, lui, collé au bord du rail. */}
       <div className="mb-4 flex items-center justify-between gap-2 pl-4 pr-2">
         {/* One rail, two areas — the subtitle is what tells them apart. */}
-        <Logo subtitle={isAgentPath(pathname) ? 'Espace agent' : undefined} />
+        <Logo subtitle={isAgentPath(pathname) ? 'Espace Agent' : undefined} />
         {inDrawer && (
           <Button variant="ghost" size="icon" onClick={closeSidebar} aria-label="Fermer le menu">
             <X aria-hidden="true" />

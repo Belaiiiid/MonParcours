@@ -13,6 +13,7 @@ import { LandingHeader } from '@/features/chatbot/components/landing/LandingHead
 import { VoiceAssistantProvider } from '@/features/voice/components/VoiceAssistantProvider';
 import { VoicePageProvider } from '@/features/voice/context/VoicePageContext';
 import { cn } from '@/lib/utils';
+import { useSessionStore } from '@/store/sessionStore';
 
 /**
  * Administral-styled application shell — the citizen area only.
@@ -31,6 +32,10 @@ import { cn } from '@/lib/utils';
  * public (`LandingHeader`) : la liste des administrations se parcourt sans
  * compte, elle prolonge la page d'accueil plutôt que l'espace connecté, et
  * changer de barre entre les deux se lisait comme un changement de site.
+ *
+ * Une fois la session ouverte, cette même page reprend l'en-tête de l'espace
+ * citoyen : la barre publique y proposerait « Se connecter » à quelqu'un qui
+ * l'est déjà, et lui retirerait ses notifications et son menu de compte.
  */
 export function CitizenAppShell({
   variant = 'full',
@@ -40,8 +45,10 @@ export function CitizenAppShell({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const isLanding = variant === 'landing';
-  const hideChrome = variant === 'minimal' || isLanding;
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  // La barre publique ne coiffe la page que pour un visiteur sans session.
+  const isLanding = variant === 'landing' && !isAuthenticated;
+  const hideChrome = variant === 'minimal' || variant === 'landing';
   /*
    * L'assistant est une surface de conversation, pas un document : la page y
    * tient exactement dans l'écran, et le seul ascenseur est celui du fil de

@@ -59,7 +59,10 @@ export function CitizenHeader({ variant = 'full', onOpenMenu }: CitizenHeaderPro
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/90 px-4 backdrop-blur md:px-8">
+    // Pas de filet bas : sur le fond clair des pages il se lisait comme une
+    // ligne blanche parasite au défilement. C'est l'ombre douce qui détache la
+    // barre, comme sur l'en-tête public.
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 bg-background/90 px-4 shadow-soft backdrop-blur md:px-8">
       {variant === 'full' && onOpenMenu && (
         <button
           type="button"
@@ -84,14 +87,26 @@ export function CitizenHeader({ variant = 'full', onOpenMenu }: CitizenHeaderPro
         // rembourrage de l'en-tête, comme sur les autres barres.
         className={cn('ml-2 flex items-center gap-2.5', variant === 'full' && 'lg:hidden')}
       >
-        <img src={logo} alt="Administral" className="size-9 shrink-0 object-contain" />
-        {/* Mot-symbole sur deux lignes, comme l'en-tête public : la signature
-            qualifie la marque, elle ne doit pas se lire comme un lien de plus. */}
+        <img src={logo} alt="Administral" className="size-11 shrink-0 object-contain" />
+        {/* Mot-symbole sur deux lignes, aux mesures exactes de l'en-tête public
+            (`LandingHeader`) : la signature qualifie la marque, elle ne doit
+            pas se lire comme un lien de plus, et la marque ne doit pas changer
+            de taille d'une interface à l'autre. */}
         <span className="hidden leading-tight sm:block">
-          <span className="block font-display text-base font-extrabold tracking-tight text-ink">
+          <span className="block font-display text-lg font-extrabold tracking-tight text-ink">
             ADMINISTRAL
           </span>
-          <span className="mt-0.5 block text-label-sm text-muted-foreground">République 5.0</span>
+          <span className="mt-0.5 block text-sm leading-tight text-muted-foreground">
+            République 5.0
+            {/* Nomme l'espace où l'on se trouve, une fois la session ouverte :
+                la même marque coiffe l'accueil public et l'espace citoyen. */}
+            {isAuthenticated && (
+              <>
+                <span aria-hidden="true" className="mx-1.5 text-border">|</span>
+                Espace Citoyen
+              </>
+            )}
+          </span>
         </span>
       </Link>
 

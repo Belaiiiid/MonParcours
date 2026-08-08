@@ -51,14 +51,18 @@ export function CitizenSidebar({ onNavigate }: { onNavigate?: () => void }) {
         onClick={onNavigate}
         className="mb-6 ml-2 flex items-center gap-3 rounded-lg px-2 py-1 transition-colors duration-200 ease-standard hover:bg-brand-soft"
       >
-        <img src={logo} alt="" aria-hidden="true" className="size-10 shrink-0 object-contain" />
+        <img src={logo} alt="" aria-hidden="true" className="size-11 shrink-0 object-contain" />
         <span className="leading-tight">
-          <span className="block font-display text-base font-extrabold tracking-tight text-ink">
+          <span className="block font-display text-lg font-extrabold tracking-tight text-ink">
             ADMINISTRAL
           </span>
-          {/* Même signature que l'en-tête : sur desktop, ce rail est le seul
-              endroit où la marque apparaît, les deux ne doivent pas diverger. */}
-          <span className="block text-label-sm text-muted-foreground">République 5.0</span>
+          {/* Le rail nomme l'espace, pas la marque : « République 5.0 » est la
+              signature des en-têtes, où la même barre coiffe l'accueil public
+              et l'espace connecté. Ici il n'y a qu'un espace possible, et le
+              rail sert à s'y repérer. */}
+          <span className="mt-0.5 block text-sm leading-tight text-muted-foreground">
+            Espace Citoyen
+          </span>
         </span>
       </Link>
 
