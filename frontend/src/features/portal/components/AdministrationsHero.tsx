@@ -147,7 +147,14 @@ export function AdministrationsHero({ query, onQueryChange }: AdministrationsHer
           vide à sa droite ne doit rien intercepter. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10">
         <div className="pl-4 pt-6 sm:pl-6">
-          <CitizenBackButton fallbackTo={ROUTES.home} className="pointer-events-auto" />
+          {/* Toujours l'accueil public, jamais l'écran précédent : ce bandeau
+              n'est montré qu'aux visiteurs sans session, pour qui « revenir »
+              veut dire ressortir du portail. */}
+          <CitizenBackButton
+            fallbackTo={ROUTES.home}
+            alwaysFallback
+            className="pointer-events-auto"
+          />
         </div>
       </div>
 

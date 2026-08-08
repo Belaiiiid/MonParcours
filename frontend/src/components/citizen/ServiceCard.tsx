@@ -84,14 +84,17 @@ const SIZES: Record<ServiceCardSize, SizeTokens> = {
   },
   compact: {
     // La vignette porte l'identité du service : elle gagne la hauteur, le reste
-    // de la carte est inchangé.
-    panel: 'h-48',
+    // de la carte est inchangé. Les illustrations sont cadrées large, avec de
+    // la marge autour du sujet — sous 15rem, `object-cover` rognait les têtes.
+    panel: 'h-64',
     badge: 'size-12',
     badgeIcon: 'size-5',
-    body: 'p-5 pt-7',
+    // Le corps rend à la vignette la place qu'il n'utilise pas : le badge garde
+    // l'air qu'il lui faut en haut, le reste se resserre.
+    body: 'p-4 pt-8',
     name: 'text-base',
-    description: 'mt-2 line-clamp-3 text-sm',
-    cta: 'py-2.5 text-sm',
+    description: 'mt-1.5 line-clamp-2 text-sm',
+    cta: 'py-2 text-sm',
     logo: 'max-h-20 max-w-[76%]',
   },
 };

@@ -237,7 +237,7 @@ export default function JobMatchPage() {
     <div className="mx-auto max-w-container pb-24">
       <CitizenPageHeader
         eyebrow="Analyse de candidature"
-        title="Votre candidature confrontée à l’offre, avant de postuler."
+        title="Votre candidature confrontée à l’offre, avant de postuler"
         description="Compétences requises, ce qu’il vous manque, documents à préparer, et une estimation prudente de vos chances."
         // Même recette que « Déposer un dossier » / « Suivre un dossier
         // déposé » : police sans, taille `display`, bleu #102a74 — sinon les

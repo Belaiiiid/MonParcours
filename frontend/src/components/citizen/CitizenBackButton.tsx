@@ -16,6 +16,13 @@ export interface CitizenBackButtonProps {
    * seule laisserait un bouton anonyme au lecteur d'écran.
    */
   label?: string;
+  /**
+   * Ignore l'historique et va toujours sur `fallbackTo`. Pour les pages dont
+   * le « retour » désigne un cran précis du parcours — la liste des
+   * administrations depuis une administration, l'accueil public depuis la
+   * liste — et non le dernier écran visité, quel qu'il soit.
+   */
+  alwaysFallback?: boolean;
   className?: string;
 }
 
@@ -46,6 +53,7 @@ const PILL = [
 export function CitizenBackButton({
   fallbackTo,
   label = 'Retour',
+  alwaysFallback = false,
   className,
 }: CitizenBackButtonProps) {
   const navigate = useNavigate();
@@ -53,7 +61,9 @@ export function CitizenBackButton({
   return (
     <button
       type="button"
-      onClick={() => (hasHistory() ? navigate(-1) : navigate(fallbackTo))}
+      onClick={() =>
+        !alwaysFallback && hasHistory() ? navigate(-1) : navigate(fallbackTo)
+      }
       className={cn(PILL, className)}
     >
       <ArrowLeft className="size-[18px]" aria-hidden="true" />

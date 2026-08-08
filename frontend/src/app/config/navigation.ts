@@ -18,9 +18,11 @@ import {
   type NavItem,
   type NavSections,
 } from '@/app/config/nav-item';
+import { getService } from '@/app/config/services';
 import { ROUTES } from '@/app/router/paths';
 import { AGENT_NAV, AGENT_SECONDARY_NAV } from '@/features/agent/config/navigation';
 import { isAgentPath } from '@/features/agent/paths';
+import type { ServiceDefinition } from '@/types';
 
 // Re-exported so existing importers (Sidebar) keep their import path.
 export { isNavItemActive };
@@ -81,6 +83,13 @@ const FRANCE_TRAVAIL_NAV: NavItem[] = [
     match: (pathname) => pathname === ROUTES.administrations,
   },
   {
+    id: 'job-search',
+    label: 'Rechercher un emploi',
+    to: ROUTES.franceTravailJobSearch,
+    icon: Search,
+    match: (pathname) => pathname === ROUTES.franceTravailJobSearch,
+  },
+  {
     id: 'job-match',
     label: 'Analyser une offre',
     to: ROUTES.franceTravail,
@@ -99,13 +108,6 @@ const FRANCE_TRAVAIL_NAV: NavItem[] = [
     to: ROUTES.franceTravailCvCoach,
     icon: MessageSquareText,
     match: (pathname) => pathname === ROUTES.franceTravailCvCoach,
-  },
-  {
-    id: 'job-search',
-    label: 'Rechercher un emploi',
-    to: ROUTES.franceTravailJobSearch,
-    icon: Search,
-    match: (pathname) => pathname === ROUTES.franceTravailJobSearch,
   },
   // Pas d'entrée « Aide IA » ici : elle pointait vers `ROUTES.chat`, l'assistant
   // du dossier CAF (statut de dossier, documentation APL), qui ne sait rien
@@ -126,9 +128,9 @@ const CITIZEN_CTA: NavCta = {
 };
 
 const FRANCE_TRAVAIL_CTA: NavCta = {
-  label: 'Analyser une offre',
-  to: ROUTES.franceTravail,
-  icon: Sparkles,
+  label: 'Rechercher un emploi',
+  to: ROUTES.franceTravailJobSearch,
+  icon: Search,
 };
 
 export const SIGN_OUT_ITEM: NavItem = {
@@ -161,4 +163,40 @@ export function resolveNavSections(pathname: string): NavSections {
   }
 
   return { primary: PRIMARY_NAV, secondary: SECONDARY_NAV, cta: CITIZEN_CTA };
+}
+
+/**
+ * Surfaces citoyennes rattachées à la CAF.
+ *
+ * La CAF n'a pas un préfixe unique comme France Travail : son hub est `/portal`
+ * mais le dossier, le suivi, les pièces et l'assistant vivent à la racine. Ces
+ * bases sont donc énumérées, chacune couvrant aussi ses sous-routes.
+ */
+const CAF_BASE_PATHS = [
+  ROUTES.portal,
+  ROUTES.dossier,
+  ROUTES.documents,
+  ROUTES.chat,
+] as const;
+
+/**
+ * L'administration dont on parcourt l'espace, ou `null` hors de tout espace
+ * (liste des administrations, profil, back-office).
+ *
+ * Le rail affiche déjà la marque du portail ; savoir *chez qui* l'on se trouve
+ * ne se lit sinon que dans les intitulés du menu — ambigu quand deux
+ * administrations proposent des entrées de même forme.
+ */
+export function resolveAdministration(pathname: string): ServiceDefinition | null {
+  if (isAgentPath(pathname)) return null;
+
+  if (isSelfOrChild(ROUTES.franceTravail)(pathname)) {
+    return getService('france-travail') ?? null;
+  }
+
+  if (CAF_BASE_PATHS.some((base) => isSelfOrChild(base)(pathname))) {
+    return getService('caf') ?? null;
+  }
+
+  return null;
 }

@@ -127,14 +127,14 @@ const routes = [
     // Administral redesign: `CitizenAppShell` (not `AppShell`) — see
     // src/index.css `.citizen-scope`. Kept off the agent back-office, which
     // still renders through `AppShell` below.
-    element: <CitizenAppShell variant="minimal" />,
-    children: [{ path: ROUTES.portal, element: <CitizenDashboardPage /> }],
-  },
-  {
-    // Même coque, mais coiffée de l'en-tête public : la liste des
-    // administrations se parcourt sans compte et prolonge la page d'accueil.
+    // Coiffées de l'en-tête public tant qu'aucune session n'est ouverte : ces
+    // deux pages se parcourent sans compte et prolongent la page d'accueil.
+    // Une fois connecté, `CitizenAppShell` rend l'en-tête citoyen à leur place.
     element: <CitizenAppShell variant="landing" />,
-    children: [{ path: ROUTES.administrations, element: <AdministrationsPage /> }],
+    children: [
+      { path: ROUTES.administrations, element: <AdministrationsPage /> },
+      { path: ROUTES.portal, element: <CitizenDashboardPage /> },
+    ],
   },
   {
     // Authenticated citizen area.

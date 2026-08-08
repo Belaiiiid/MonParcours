@@ -43,7 +43,7 @@ export const CAF_SERVICES: CafServiceDefinition[] = [
       'Versement mensuel aux familles ayant au moins deux enfants à charge, sans condition d’activité.',
     basePath: '',
     status: 'coming_soon',
-    photoUrl: '/caf-services/af.svg',
+    photoUrl: '/AF.png',
   },
   {
     id: 'alf',
@@ -53,7 +53,7 @@ export const CAF_SERVICES: CafServiceDefinition[] = [
       'Aide au logement pour les foyers avec personnes à charge qui ne peuvent pas prétendre à l’APL.',
     basePath: '',
     status: 'coming_soon',
-    photoUrl: '/caf-services/alf.svg',
+    photoUrl: '/ALF.png',
   },
   {
     id: 'prime-activite',
@@ -63,7 +63,7 @@ export const CAF_SERVICES: CafServiceDefinition[] = [
       'Complète les revenus des personnes qui travaillent tout en gagnant peu. Ici : estimez et suivez votre montant.',
     basePath: '',
     status: 'coming_soon',
-    photoUrl: '/caf-services/prime-activite.svg',
+    photoUrl: '/PA.png',
   },
 ];
 
