@@ -291,6 +291,29 @@
 }
 
 @layer components {
+  /*
+   * Le fond des surfaces d'assistant : trois tons froids en degrade vertical,
+   * plus trois halos radiaux — bleu en haut a gauche, rouge en haut a droite,
+   * bleu au centre bas.
+   *
+   * Volontairement a la limite du perceptible. Une conversation qui n'a pas
+   * encore commence laisse un grand vide ; un blanc plat y donne l'impression
+   * d'un ecran non charge, alors que ces halos suffisent a installer une
+   * profondeur derriere le titre et les cartes sans leur disputer l'attention.
+   *
+   * En CSS plutot qu'en style en ligne : les trois hotes (accueil public,
+   * Aide IA, Coach CV) le posent sur des elements differents — une <main>,
+   * une <section>, une carte — et une classe se passe partout ou un objet de
+   * style demanderait a chacun d'exposer un `style`.
+   */
+  .assistant-backdrop {
+    background-image:
+      radial-gradient(60rem 40rem at 0% 0%, rgba(30, 58, 138, 0.1), transparent 60%),
+      radial-gradient(50rem 35rem at 100% 0%, rgba(200, 16, 46, 0.06), transparent 60%),
+      radial-gradient(60rem 40rem at 50% 100%, rgba(30, 58, 138, 0.08), transparent 65%),
+      linear-gradient(180deg, #f5f7fc 0%, #eef1f9 55%, #e9edf7 100%);
+  }
+
   /* Section titles: label-md, uppercase, wide tracking (see analysis §3.2). */
   .section-title {
     @apply text-label-md uppercase tracking-wider text-on-surface;

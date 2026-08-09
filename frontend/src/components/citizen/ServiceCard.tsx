@@ -10,6 +10,7 @@ import {
   IdCard,
   Landmark,
   Lock,
+  MessageCircle,
   PiggyBank,
   Receipt,
   Tractor,
@@ -17,6 +18,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { useChatbotUiStore } from '@/features/chatbot/store/chatbotUiStore';
 import { cn } from '@/lib/utils';
 import type { AdministrationId, ServiceDefinition } from '@/types';
 
@@ -146,6 +148,7 @@ export function ServiceCard({
   className,
 }: ServiceCardProps) {
   const s = SIZES[size];
+  const askAssistant = useChatbotUiStore((state) => state.ask);
 
   return (
     <article
@@ -238,8 +241,9 @@ export function ServiceCard({
           {description}
         </p>
 
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex items-center justify-center gap-2">
           {available ? (
+            <>
             <Link
               to={to}
               className={cn(
@@ -258,6 +262,33 @@ export function ServiceCard({
               {ctaLabel}
               <ArrowRight className="size-4 shrink-0 transition-transform duration-200 group-hover/card:translate-x-1" aria-hidden="true" />
             </Link>
+
+            {/* Second chemin vers ce service : demander plutôt qu'ouvrir.
+                Réservé aux services ouverts — sur un service fermé, l'assistant
+                n'aurait rien à raconter d'autre que « pas encore disponible »,
+                que le bouton dit déjà.
+
+                `relative z-10` obligatoire : la zone de clic du bouton principal
+                couvre toute la carte (`after:inset-0`) et passerait par-dessus
+                celle-ci. `shrink-0` garde la pastille carrée face au bouton
+                pleine largeur du gabarit `compact`. */}
+            <button
+              type="button"
+              onClick={() => askAssistant(`Parlez-moi de ${name} et de ce que je peux y faire.`)}
+              aria-label={`Poser une question sur ${name} à l’assistant`}
+              className={cn(
+                'relative z-10 inline-flex shrink-0 items-center justify-center rounded-sm border border-brand/25 bg-brand-soft text-brand',
+                'transition-colors duration-200 hover:border-brand/50 hover:bg-brand hover:text-white',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
+                // Carré fixe plutôt que la hauteur du bouton principal : à
+                // `aspect-square` sur `s.cta`, la pastille tombait sous les
+                // 40 px et se lisait comme une décoration, pas comme une cible.
+                size === 'compact' ? 'size-11' : 'size-12',
+              )}
+            >
+              <MessageCircle className="size-5 shrink-0" aria-hidden="true" />
+            </button>
+            </>
           ) : (
             <span
               className={cn(

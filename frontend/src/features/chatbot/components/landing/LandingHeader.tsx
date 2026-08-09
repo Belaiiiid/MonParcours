@@ -43,12 +43,24 @@ function NavUnderline() {
   );
 }
 
+export interface LandingHeaderProps {
+  /**
+   * Intercepte le clic sur la marque, au lieu de laisser le lien vers
+   * l'accueil s'en charger.
+   *
+   * L'accueil public rend l'assistant *à la place* de la page, sans changer
+   * d'URL : le lien vers `/` y est un clic mort, puisqu'on y est déjà. Cette
+   * échappatoire rend au logo son rôle attendu — revenir à la page d'accueil.
+   */
+  onBrandClick?: () => void;
+}
+
 /**
  * Administral-styled public header — structural twin of the reference
  * design-to-code `Header`, adapted to `react-router-dom` and to a real "Se
  * connecter" destination.
  */
-export function LandingHeader() {
+export function LandingHeader({ onBrandClick }: LandingHeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -79,7 +91,17 @@ export function LandingHeader() {
           scrolled ? 'h-14' : 'h-16',
         )}
       >
-        <Link to={ROUTES.home} className="flex items-center gap-3">
+        <Link
+          to={ROUTES.home}
+          onClick={(event) => {
+            if (!onBrandClick) return;
+            // `preventDefault` : la navigation vers `/` depuis `/` ne
+            // remonterait rien à l'écran, c'est `onBrandClick` qui referme.
+            event.preventDefault();
+            onBrandClick();
+          }}
+          className="flex items-center gap-3"
+        >
           <img
             src={scrolled ? SCROLLED_LOGO : logo}
             alt="Administral"
