@@ -209,7 +209,7 @@ class RagPipeline:
             return bm25_results[:top_k]
         return reciprocal_rank_fusion(bm25_results, semantic_results, top_k=top_k)
 
-    def generate_answer(self, query, retrieved_chunks, conversation_history=None, model="mistral-small-latest", provider="mistral", consigne_finale=None):
+    def generate_answer(self, query, retrieved_chunks, conversation_history=None, model=None, provider="mistral", consigne_finale=None):
         """Retourne un dict {"type": "answer"|"clarification", "text": str, "options": list|None}.
         Lève `LlmContractError` si le modèle ne rend pas le JSON demandé (voir llm_client).
 
@@ -230,7 +230,7 @@ class RagPipeline:
 
         return call_llm_structured(messages=messages, model=model, provider=provider, temperature=0.2)
 
-    def answer(self, query, top_k=3, category="demarche", conversation_history=None, model="mistral-small-latest", provider="mistral", requete_recherche=None, consigne_finale=None):
+    def answer(self, query, top_k=3, category="demarche", conversation_history=None, model=None, provider="mistral", requete_recherche=None, consigne_finale=None):
         """`requete_recherche` permet de CHERCHER avec autre chose que ce qu'on montre au
         modèle. Un dialogue de clarification en a besoin : les réponses données sont
         indispensables au retrieval, mais « Je ne comprends pas, expliquez-moi » n'apporte
