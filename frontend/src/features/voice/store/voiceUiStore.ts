@@ -7,7 +7,7 @@ interface VoiceUiState {
   toggle: () => void;
 }
 
-export const useVoiceUiStore = create<VoiceUiState>((set, get) => ({
+export const useVoiceUiStore = create<VoiceUiState>((set) => ({
   isOpen: false,
   open: () => set({ isOpen: true }),
   close: () => set({ isOpen: false }),

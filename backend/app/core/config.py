@@ -55,7 +55,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     # -- Cloudflare Turnstile (anti-bot) -----------------------------------
-    # Optional: when unset, captcha verification is skipped (local dev).
+    # Both keys come from the Cloudflare dashboard (Turnstile → your widget).
+    # The site key is public — it is served to the frontend via GET /auth/config.
+    # The secret key stays server-side and is used to verify tokens.
+    # When either is unset, captcha verification is skipped (local dev).
+    turnstile_site_key: str | None = None
     turnstile_secret_key: str | None = None
 
     # -- Account tokens (email verification / password reset) --------------

@@ -161,9 +161,9 @@ export default function RegisterPage() {
     // les blancs — jamais le contenu — pour que la carte tienne dans une fenêtre
     // basse, la page étant verrouillée en hauteur par `AuthLayout`.
     <Card className="rounded-2xl border-none bg-surface-lowest shadow-soft-hover">
-      <CardContent className="p-8 pb-6 sm:p-10 sm:pb-7 short:p-6 short:pb-5 short:sm:p-7">
-        <div className="mb-8 flex flex-col items-center text-center short:mb-5">
-          <span className="mb-4 flex size-24 items-center justify-center rounded-2xl bg-surface-lowest shadow-soft ring-1 ring-primary-fixed short:mb-3 short:size-16 shorter:size-14">
+      <CardContent className="p-8 pb-6 sm:p-10 sm:pb-7 short:p-6 short:pb-5 short:sm:p-7 shorter:p-4 shorter:pb-3 shorter:sm:p-5">
+        <div className="mb-8 flex flex-col items-center text-center short:mb-5 shorter:mb-3">
+          <span className="mb-4 flex size-24 items-center justify-center rounded-2xl bg-surface-lowest shadow-soft ring-1 ring-primary-fixed short:mb-3 short:size-16 shorter:size-12 shorter:mb-1.5">
             <img
               src="/logo.png"
               alt={APP_CONFIG.name}
@@ -182,7 +182,7 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <form className="flex flex-col gap-4 shorter:gap-3" onSubmit={handleSubmit} noValidate>
+        <form className="flex flex-col gap-4 short:gap-3 shorter:gap-2" onSubmit={handleSubmit} noValidate>
           {/* Placeholder-only fields, comme à la connexion. Le `<Label>` visible
               disparaît, donc chaque champ porte un `aria-label` — un placeholder
               seul ne fait pas un nom accessible, et il s'efface dès la première
@@ -348,7 +348,7 @@ export default function RegisterPage() {
             block
             size="lg"
             disabled={!canSubmit}
-            className="mt-1 h-12 rounded-2xl bg-marianne text-body-lg font-semibold hover:bg-primary"
+            className="mt-1 h-12 short:h-11 shorter:h-10 rounded-2xl bg-marianne text-body-lg short:text-body-md font-semibold hover:bg-primary"
           >
             {isLoggingIn ? 'Création du compte…' : 'Créer mon compte'}
           </Button>
@@ -362,7 +362,7 @@ export default function RegisterPage() {
             au formulaire, l'écart doit se lire comme une rupture et non comme
             l'interligne suivant. Resserré sur une fenêtre basse, la carte devant
             tenir sans défilement. */}
-        <div className="mt-10 flex items-center justify-center gap-3 opacity-70 short:mt-6">
+        <div className="mt-10 flex items-center justify-center gap-3 opacity-70 short:mt-6 shorter:mt-3">
           <span className="text-label-sm leading-none text-on-surface-variant">Propulsé par</span>
           {/* Décalage de 3px sur Talan : le PNG porte sa signature « Positive
               innovation » sous le mot-symbole, son centre optique remonte donc

@@ -1,9 +1,5 @@
 # Administral
 
-Un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte — interface agent et interface citoyen, assistant IA (RAG APL), et passerelle voix.
-
-## Contexte du projet
-
 Administral est un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte. Il propose deux espaces cohérents mais distincts:
 - Espace citoyen (Administral): dépôt de pièces, suivi de dossier, assistant conversationnel (RAG APL) et panneau vocal.
 - Espace agent (back‑office): validation des dossiers, contestations, contrôle documentaire (vision, optionnel).
@@ -12,25 +8,6 @@ Objectifs principaux:
 - Réduire les frictions d’accès aux droits (APL en priorité) avec une expérience moderne et accessible.
 - Offrir aux agents des outils de revue homogènes et traçables.
 - Expérimenter des assistants IA transparents (sources citées) et sûrs.
-
-## Assistants IA et agents
-
-- Assistant conversationnel (RAG APL)
-  - Sources officielles (service‑public.fr, caf.fr), citations intégrées.
-  - Recherche hybride (BM25 + vecteurs) si activée; LLM Mistral pour la génération.
-  - Surfaces: widget flottant (FloatingChatbot), page dédiée /chat, centre de documentation.
-
-- Assistant vocal
-  - Panneau flottant « Assistant vocal » (visiteurs et connectés), push‑to‑talk, arrêt de la synthèse.
-  - Affiche le statut et le texte transcrit en direct.
-  - Basé sur VoiceAssistantProvider (STT/TTS configurés via VOICE_* dans backend/.env).
-
-- Assistant de profilage APL
-  - Overlay plein écran guidé par règles déterministes; fallback LLM si nécessaire.
-  - Écrit les réponses dans le profil citoyen.
-
-- Vision (optionnel)
-  - Microservice de détection de falsification/document (TruFor), exposé sur 8011.
 
 ## Architecture applicative (vue d’ensemble)
 
@@ -66,6 +43,26 @@ docs/             # Notes d’architecture et de design
 - Frontend: React + Vite + Tailwind + shadcn/ui
 - Backend: FastAPI + SQLAlchemy 2 + Alembic + PostgreSQL
 - Vision (optionnel): microservice de détection de fraude/document
+
+
+## Assistants IA et agents
+
+- Assistant conversationnel (RAG APL)
+  - Sources officielles (service‑public.fr, caf.fr), citations intégrées.
+  - Recherche hybride (BM25 + vecteurs) si activée; LLM Mistral pour la génération.
+  - Surfaces: widget flottant (FloatingChatbot), page dédiée /chat, centre de documentation.
+
+- Assistant vocal
+  - Panneau flottant « Assistant vocal » (visiteurs et connectés), push‑to‑talk, arrêt de la synthèse.
+  - Affiche le statut et le texte transcrit en direct.
+  - Basé sur VoiceAssistantProvider (STT/TTS configurés via VOICE_* dans backend/.env).
+
+- Assistant de profilage APL
+  - Overlay plein écran guidé par règles déterministes; fallback LLM si nécessaire.
+  - Écrit les réponses dans le profil citoyen.
+
+- Vision (optionnel)
+  - Microservice de détection de falsification/document (TruFor), exposé sur 8011.
 
 ## Prérequis
 

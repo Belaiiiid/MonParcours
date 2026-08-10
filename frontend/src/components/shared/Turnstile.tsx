@@ -1,19 +1,18 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
+
+import { API_BASE_URL } from '@/services/apiClient';
 
 /**
  * Cloudflare Turnstile widget — drop-in captcha for auth forms.
  *
- * Loads the Turnstile script lazily on first mount and renders the widget into
- * a container `div`. When the challenge is solved, `onVerify` delivers the
- * token; when it expires, `onExpire` lets the parent clear its state so the
- * submit button becomes disabled again.
- *
- * The site key is read from `VITE_TURNSTILE_SITE_KEY` — set it in
- * `frontend/.env`.
+ * The site key is fetched from `GET /api/auth/config` at mount time so the
+ * frontend needs no `.env` file of its own — all configuration lives in
+ * `backend/.env`. When the backend returns `null` (key not configured),
+ * the widget is hidden and a dev-bypass token is emitted so the submit
+ * button is never blocked during local development.
  */
 
 const TURNSTILE_SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
 
 interface TurnstileProps {
   /** Called with the Turnstile token once the challenge is solved. */
@@ -36,7 +35,6 @@ function loadTurnstileScript(): Promise<void> {
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise<void>((resolve, reject) => {
-    // Already loaded (e.g. injected manually in index.html).
     if (window.turnstile) {
       resolve();
       return;
@@ -55,6 +53,28 @@ function loadTurnstileScript(): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
+/* Site-key fetcher — cached, fetched once per app session            */
+/* ------------------------------------------------------------------ */
+
+let siteKeyCache: string | null | undefined = undefined; // undefined = not yet fetched
+
+async function fetchSiteKey(): Promise<string | null> {
+  if (siteKeyCache !== undefined) return siteKeyCache;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/config`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = (await res.json()) as { turnstileSiteKey?: string | null };
+    siteKeyCache = data.turnstileSiteKey ?? null;
+  } catch (err) {
+    console.error('[Turnstile] Failed to fetch site key from backend:', err);
+    siteKeyCache = null;
+  }
+
+  return siteKeyCache;
+}
+
+/* ------------------------------------------------------------------ */
 /* Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -66,6 +86,7 @@ export default function Turnstile({
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const [siteKey, setSiteKey] = useState<string | null | undefined>(siteKeyCache);
 
   // Stable callback refs so the widget doesn't re-render on every parent render.
   const onVerifyRef = useRef(onVerify);
@@ -73,36 +94,45 @@ export default function Turnstile({
   const onExpireRef = useRef(onExpire);
   onExpireRef.current = onExpire;
 
-  const renderWidget = useCallback(() => {
-    if (!containerRef.current || !window.turnstile || !SITE_KEY) return;
+  const renderWidget = useCallback(
+    (key: string) => {
+      if (!containerRef.current || !window.turnstile) return;
+      if (widgetIdRef.current !== null) return; // already rendered
 
-    // Avoid duplicate renders.
-    if (widgetIdRef.current !== null) return;
-
-    widgetIdRef.current = window.turnstile.render(containerRef.current, {
-      sitekey: SITE_KEY,
-      theme,
-      size,
-      callback: (token: string) => onVerifyRef.current(token),
-      'expired-callback': () => onExpireRef.current?.(),
-    });
-  }, [theme, size]);
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: key,
+        theme,
+        size,
+        callback: (token: string) => onVerifyRef.current(token),
+        'expired-callback': () => onExpireRef.current?.(),
+      });
+    },
+    [theme, size],
+  );
 
   useEffect(() => {
-    if (!SITE_KEY) {
-      console.warn(
-        '[Turnstile] VITE_TURNSTILE_SITE_KEY is not set — captcha widget will not render.',
-      );
-      // Auto-verify in development so the submit button is not blocked
-      onVerifyRef.current('dev-bypass-token');
-      return;
-    }
+    let cancelled = false;
 
-    loadTurnstileScript()
-      .then(renderWidget)
-      .catch((err) => console.error('[Turnstile] Script load failed:', err));
+    fetchSiteKey().then((key) => {
+      if (cancelled) return;
+      setSiteKey(key);
+
+      if (!key) {
+        // No key configured → dev mode: auto-verify so the form is usable.
+        console.warn(
+          '[Turnstile] TURNSTILE_SITE_KEY not set on the backend — captcha widget will not render.',
+        );
+        onVerifyRef.current('dev-bypass-token');
+        return;
+      }
+
+      loadTurnstileScript()
+        .then(() => { if (!cancelled) renderWidget(key); })
+        .catch((err) => console.error('[Turnstile] Script load failed:', err));
+    });
 
     return () => {
+      cancelled = true;
       if (widgetIdRef.current !== null && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
@@ -110,11 +140,11 @@ export default function Turnstile({
     };
   }, [renderWidget]);
 
-  // Nothing to show when the key is missing — dev mode without Turnstile.
-  if (!SITE_KEY) return null;
+  // Nothing to show while loading or when the key is absent.
+  if (!siteKey) return null;
 
   return (
-    <div className="flex justify-center rounded-lg border border-border bg-surface-low p-3">
+    <div className="flex justify-center">
       <div ref={containerRef} />
     </div>
   );

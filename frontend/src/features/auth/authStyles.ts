@@ -6,7 +6,7 @@
  * teintes viennent de `.login-scope` (src/index.css), posé par `AuthLayout`.
  */
 export const AUTH_FIELD = [
-  'h-12 rounded-xl border-[var(--login-border)] bg-[var(--login-field)] text-body-md',
+  'h-12 short:h-11 shorter:h-10 rounded-xl border-[var(--login-border)] bg-[var(--login-field)] text-body-md',
   'focus-visible:border-[var(--login-navy)] focus-visible:ring-0',
   'focus-visible:shadow-[var(--login-focus-ring)]',
 ].join(' ');

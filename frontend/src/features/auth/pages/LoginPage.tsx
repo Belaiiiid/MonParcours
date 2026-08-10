@@ -120,9 +120,9 @@ export default function LoginPage() {
     // whitespace only, so the whole card still fits a laptop viewport without
     // a scrollbar. Nothing is hidden or shrunk below its readable size.
     <Card className="rounded-2xl border-none bg-surface-lowest shadow-soft-hover">
-      <CardContent className="p-8 pb-6 sm:p-10 sm:pb-7 short:p-6 short:pb-5 short:sm:p-7">
-        <div className="mb-8 flex flex-col items-center text-center short:mb-5">
-          <span className="mb-4 flex size-24 items-center justify-center rounded-2xl bg-surface-lowest shadow-soft ring-1 ring-primary-fixed short:mb-3 short:size-16 shorter:size-14">
+      <CardContent className="p-8 pb-6 sm:p-10 sm:pb-7 short:p-6 short:pb-5 short:sm:p-7 shorter:p-4 shorter:pb-3 shorter:sm:p-5">
+        <div className="mb-8 flex flex-col items-center text-center short:mb-5 shorter:mb-3">
+          <span className="mb-4 flex size-24 items-center justify-center rounded-2xl bg-surface-lowest shadow-soft ring-1 ring-primary-fixed short:mb-3 short:size-16 shorter:size-12 shorter:mb-1.5">
             <img
               src="/logo.png"
               alt={APP_CONFIG.name}
@@ -175,7 +175,7 @@ export default function LoginPage() {
 
         <form
           ref={formRef}
-          className="flex flex-col gap-4 shorter:gap-3"
+          className="flex flex-col gap-4 short:gap-3 shorter:gap-2"
           onSubmit={handleSubmit}
           noValidate
         >
@@ -258,28 +258,28 @@ export default function LoginPage() {
             block
             size="lg"
             disabled={isLoggingIn || !turnstileToken}
-            className="mt-1 h-12 rounded-2xl bg-marianne text-body-lg font-semibold hover:bg-primary"
+            className="mt-1 h-12 short:h-11 shorter:h-10 rounded-2xl bg-marianne text-body-lg short:text-body-md font-semibold hover:bg-primary"
           >
             {isLoggingIn ? 'Connexion…' : 'Se connecter'}
           </Button>
         </form>
 
-        <div className="my-6 flex items-center gap-4 short:my-4">
+        <div className="my-6 flex items-center gap-4 short:my-4 shorter:my-2">
           <span aria-hidden="true" className="h-px flex-1 bg-primary-fixed" />
           <span className="text-label-sm text-on-surface-variant">Ou connectez-vous avec</span>
           <span aria-hidden="true" className="h-px flex-1 bg-primary-fixed" />
         </div>
 
-        <FranceConnectButton variant="muted" className="h-12 rounded-xl" />
+        <FranceConnectButton variant="muted" className="h-12 short:h-11 shorter:h-10 py-1.5 rounded-xl" />
         {/* 26px demandés de part et d'autre de ces deux lignes — valeur exacte,
             hors échelle Tailwind, d'où la notation entre crochets. */}
-        <p className="mt-[26px] text-center">
+        <p className="mt-[26px] short:mt-4 shorter:mt-2 text-center">
           <Link to="/franceconnect" className="text-body-sm text-on-surface-variant hover:underline">
             Qu’est-ce que FranceConnect ?
           </Link>
         </p>
 
-        <div className="mt-[26px] text-center opacity-70">
+        <div className="mt-[26px] short:mt-4 shorter:mt-2 text-center opacity-70">
           <p className="text-label-sm text-on-surface-variant">
             Vous n’avez pas de compte ?{' '}
             <Link to={ROUTES.register} className="text-ai hover:underline">
@@ -291,7 +291,7 @@ export default function LoginPage() {
         {/* `PartnerLogos` rather than two hand-written image tags: it already
             pairs Talan with Mistral and falls back to a text wordmark if an
             asset is missing. `wordmark` selects /mistral-logo.svg. */}
-        <div className="mt-[26px] flex items-center justify-center gap-3 opacity-70">
+        <div className="mt-[26px] short:mt-4 shorter:mt-2 flex items-center justify-center gap-3 opacity-70">
           <span className="text-label-sm leading-none text-on-surface-variant">Propulsé par</span>
           {/* Même hauteur de boîte pour les deux marques (20px).
               Le décalage de 3px : le PNG Talan porte sa signature « Positive
