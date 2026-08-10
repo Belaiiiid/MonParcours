@@ -1,4 +1,4 @@
-# MonParcours
+# Administral
 
 Un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte — interface agent et interface citoyen, assistant IA (RAG APL), et passerelle voix.
 
@@ -36,7 +36,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 cp .env.example .env             # renseigner DATABASE_PASSWORD, MISTRAL_API_KEY si dispo
-psql -U postgres -c "CREATE DATABASE monparcours;"
+psql -U postgres -c "CREATE DATABASE administral;"
 alembic upgrade head
 
 uvicorn app.main:app --reload
@@ -137,15 +137,6 @@ Définissez `VITE_API_BASE_URL` si l’API est sur un domaine différent.
 
 - Les endpoints `/api/agent/*` sont actuellement non authentifiés (développement). Ajoutez le garde d’auth dans `backend/app/core/security.py` avant tout déploiement partagé.
 
-## Design & Qualité UI
-
-Impeccable (détecteur/hook) est activé dans ce repo.
-- Lancer un scan:
-  - Desktop: `.impeccable/report-desktop.json` (généré)
-  - Mobile: `.impeccable/report-mobile.json` (généré)
-- Prochaines améliorations UI:
-  - Retrait des “side-tab” (left border) au profit d’un accent plus subtil
-  - Typo: remplacer Inter/Plus Jakarta par une pile système ou une fonte singulière
 
 ## Dépannage
 
