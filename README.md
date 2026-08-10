@@ -2,19 +2,6 @@
 
 Un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte — interface agent et interface citoyen, assistant IA (RAG APL), et passerelle voix.
 
-- Frontend: React + Vite + Tailwind + shadcn/ui
-- Backend: FastAPI + SQLAlchemy 2 + Alembic + PostgreSQL
-- Vision (optionnel): microservice de détection de fraude/document
-
-## Monorepo
-
-```
-frontend/         # App React (Vite, TS, Tailwind)
-backend/          # API FastAPI (routes / services / repository)
-vision_service/   # Service optionnel de vision (port 8011 par défaut)
-docs/             # Notes d’architecture et de design
-```
-
 ## Contexte du projet
 
 Administral est un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte. Il propose deux espaces cohérents mais distincts:
@@ -66,6 +53,19 @@ Données et index
 
 Observabilité et qualité
 - Lint/Typecheck front, tests backend (pytest). Hooks de design disponibles.
+
+
+## Monorepo
+
+```
+frontend/         # App React (Vite, TS, Tailwind)
+backend/          # API FastAPI (routes / services / repository)
+vision_service/   # Service optionnel de vision (port 8011 par défaut)
+docs/             # Notes d’architecture et de design
+```
+- Frontend: React + Vite + Tailwind + shadcn/ui
+- Backend: FastAPI + SQLAlchemy 2 + Alembic + PostgreSQL
+- Vision (optionnel): microservice de détection de fraude/document
 
 ## Prérequis
 
