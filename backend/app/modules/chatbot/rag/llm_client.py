@@ -14,6 +14,7 @@ from mistralai.client import Mistral
 from dotenv import load_dotenv
 from langsmith import traceable
 
+from app.core.config import settings
 from app.core.logger import logger
 from . import budget
 
@@ -31,6 +32,18 @@ load_dotenv()
 #: 25 s : au-delà, le citoyen a de toute façon renoncé, et lui rendre « momentanément
 #: indisponible » vaut mieux que de tenir la ligne ouverte pour lui.
 _TIMEOUT_S = float(os.environ.get("CHATBOT_LLM_TIMEOUT_S", "25"))
+
+#: Le modèle qui RÉDIGE, et celui qui CLASSE. Ce sont deux métiers différents, d'où
+#: deux modèles — la distinction existait déjà dans `Settings`, l'assistant ne s'en
+#: servait simplement pas (il codait « small » en dur à cinq endroits).
+#:
+#: Rédiger une réponse à partir d'extraits, ou expliquer un article de loi sans le
+#: déformer, profite d'un modèle plus fort : c'est là que se joue la qualité perçue.
+#: Classer un message dans l'une de cinq intentions ne demande pas la même puissance ;
+#: y mettre le gros modèle allongerait CHAQUE tour, y compris ceux qui n'appellent
+#: ensuite aucune génération (documents, estimation).
+MODELE_GENERATION = settings.mistral_model
+MODELE_CLASSIFIEUR = settings.mistral_classifier_model
 
 _mistral_client = None
 _openai_compatible_clients = {}  # provider -> client OpenAI configuré
@@ -82,15 +95,19 @@ def get_openai_compatible_client(provider):
 
 
 @traceable(name="call_llm", run_type="llm")
-def call_llm(messages, model="mistral-small-latest", provider="mistral", json_mode=False, temperature=0.0):
+def call_llm(messages, model=None, provider="mistral", json_mode=False, temperature=0.0):
     """
     messages: liste de dicts [{"role": "system"|"user"|"assistant", "content": "..."}]
     provider: "mistral" (défaut, prod) ou un provider compatible OpenAI (ex: "groq")
               utilisé pour le benchmarking multi-LLM.
+    model: None = le modèle de génération configuré (`MODELE_GENERATION`). Un appelant
+           qui fait autre chose que rédiger — classer, par exemple — le dit
+           explicitement ; c'est le seul cas où ce paramètre se renseigne.
     json_mode: si True, force une sortie JSON valide (encore faut-il le demander
                explicitement dans le prompt, cf. doc du provider)
     Retourne: le texte de la réponse (str)
     """
+    model = model or MODELE_GENERATION
     kwargs = {}
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
@@ -228,7 +245,7 @@ def _parse_structured(raw):
     return parsed
 
 
-def call_llm_structured(messages, model="mistral-small-latest", provider="mistral", temperature=0.0):
+def call_llm_structured(messages, model=None, provider="mistral", temperature=0.0):
     """Comme call_llm, mais force une sortie JSON avec le contrat
     {"type": "answer"|"clarification", "text": str, "options": list|None} et la parse.
     Si "options" est une liste (clarification à choix), EXPLAIN_OPTION et SKIP_OPTION sont

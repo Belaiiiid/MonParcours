@@ -240,7 +240,7 @@ class LegalPipeline:
         return sources
 
     def generate_answer(self, question, articles, inconnues=None, date_reference=None,
-                        conversation_history=None, model="mistral-small-latest"):
+                        conversation_history=None, model=None):
         consigne_date = (
             f"Le citoyen interroge le droit applicable au {date_reference.isoformat()} : les articles "
             f"ci-dessous sont fournis dans leur version applicable à CETTE date. Dis-le dans ta réponse."

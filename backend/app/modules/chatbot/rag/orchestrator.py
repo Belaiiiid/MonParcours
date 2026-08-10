@@ -20,6 +20,7 @@ from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, END
 from .llm_client import (
     EXPLAIN_OPTION,
+    MODELE_CLASSIFIEUR,
     SKIP_OPTION,
     LlmContractError,
     _enforce_standard_options,
@@ -62,7 +63,7 @@ from app.modules.citizen import estimation
 VALID_INTENTS = {"documents_necessaires", "rag_general", "estimation",
                  "fondement_juridique", "fallback"}
 
-CLASSIFIER_SYSTEM_PROMPT = """Tu es un classifieur d'intention pour l'assistant citoyen de MonParcours,
+CLASSIFIER_SYSTEM_PROMPT = """Tu es un classifieur d'intention pour l'assistant citoyen de adminitral,
 qui aide sur plusieurs démarches administratives (aide au logement APL, mais aussi d'autres démarches
 comme le CROUS - bourse, logement étudiant).
 Classe le message du citoyen dans EXACTEMENT une de ces 5 catégories :
@@ -218,6 +219,11 @@ def route_intent_llm(state: D4State) -> str:
 
         result = call_llm(
             messages=messages,
+            # Le petit modèle, explicitement : ranger un message dans l'une de cinq
+            # cases ne demande pas le modèle de rédaction, et ce tour-ci est payé sur
+            # CHAQUE question - y compris celles qui n'appelleront ensuite aucune
+            # génération (documents, estimation).
+            model=MODELE_CLASSIFIEUR,
             json_mode=True,
             temperature=0.0,
         )
