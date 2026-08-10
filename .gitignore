@@ -35,3 +35,7 @@ backend/app/modules/chatbot/rag/qdrant_index.fingerprint
 # Journal des questions restées sans réponse : donnée d'exécution, propre à chaque
 # environnement. Il se relit avec `python -m app.modules.chatbot.rag.unanswered_log`.
 backend/app/modules/chatbot/rag/data/questions_sans_reponse.jsonl
+
+# Local Claude config
+.claude/
+.impeccable/ 
