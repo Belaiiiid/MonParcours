@@ -15,6 +15,58 @@ vision_service/   # Service optionnel de vision (port 8011 par défaut)
 docs/             # Notes d’architecture et de design
 ```
 
+## Contexte du projet
+
+Administral est un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte. Il propose deux espaces cohérents mais distincts:
+- Espace citoyen (Administral): dépôt de pièces, suivi de dossier, assistant conversationnel (RAG APL) et panneau vocal.
+- Espace agent (back‑office): validation des dossiers, contestations, contrôle documentaire (vision, optionnel).
+
+Objectifs principaux:
+- Réduire les frictions d’accès aux droits (APL en priorité) avec une expérience moderne et accessible.
+- Offrir aux agents des outils de revue homogènes et traçables.
+- Expérimenter des assistants IA transparents (sources citées) et sûrs.
+
+## Assistants IA et agents
+
+- Assistant conversationnel (RAG APL)
+  - Sources officielles (service‑public.fr, caf.fr), citations intégrées.
+  - Recherche hybride (BM25 + vecteurs) si activée; LLM Mistral pour la génération.
+  - Surfaces: widget flottant (FloatingChatbot), page dédiée /chat, centre de documentation.
+
+- Assistant vocal
+  - Panneau flottant « Assistant vocal » (visiteurs et connectés), push‑to‑talk, arrêt de la synthèse.
+  - Affiche le statut et le texte transcrit en direct.
+  - Basé sur VoiceAssistantProvider (STT/TTS configurés via VOICE_* dans backend/.env).
+
+- Assistant de profilage APL
+  - Overlay plein écran guidé par règles déterministes; fallback LLM si nécessaire.
+  - Écrit les réponses dans le profil citoyen.
+
+- Vision (optionnel)
+  - Microservice de détection de falsification/document (TruFor), exposé sur 8011.
+
+## Architecture applicative (vue d’ensemble)
+
+Frontend (frontend/)
+- React + Vite + TypeScript + Tailwind + shadcn/ui; structure par features/.
+- Design tokens et thèmes dans src/index.css, variantes citizen/agent.
+- Chatbot: FloatingChatbot, ChatWindow, MessageBubble, SourceCitation.
+- Voix: VoiceAssistantProvider, VoiceAssistantPanel, VoiceStatusStrip, VoicePageContext, voiceUiStore; lancement depuis FloatingActionBubbles (bulle « Assistant vocal »).
+
+Backend (backend/)
+- FastAPI: couches router → service → repository, schemas Pydantic v2, SQLAlchemy 2.
+- Endpoints APL/RAG, documents, contestations; configuration via backend/.env (DB, Mistral, Voix, CORS, etc.).
+
+Vision (backend/vision_service/)
+- Service FastAPI indépendant (port 8011), requirements dédiés (CUDA/CPU selon l’hôte).
+
+Données et index
+- PostgreSQL comme source de vérité transactionnelle.
+- Recherche: BM25 et/ou vecteurs (Qdrant) si activée; préchauffage possible.
+
+Observabilité et qualité
+- Lint/Typecheck front, tests backend (pytest). Hooks de design disponibles.
+
 ## Prérequis
 
 - Node.js ≥ 18

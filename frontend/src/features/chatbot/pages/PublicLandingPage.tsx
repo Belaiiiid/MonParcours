@@ -18,6 +18,7 @@ import { LandingServices } from '@/features/chatbot/components/landing/LandingSe
 import { LandingTrust } from '@/features/chatbot/components/landing/LandingTrust';
 import { Reveal } from '@/features/chatbot/components/landing/Reveal';
 import { VoiceAssistantProvider } from '@/features/voice/components/VoiceAssistantProvider';
+import { VoiceAssistantPanel } from '@/features/voice/components/VoiceAssistantPanel';
 import { VoiceOnboardingDialog } from '@/features/voice/components/VoiceOnboardingDialog';
 import { VoiceStatusStrip } from '@/features/voice/components/VoiceStatusStrip';
 import { VoicePageProvider, useVoicePage } from '@/features/voice/context/VoicePageContext';
@@ -54,6 +55,7 @@ export default function PublicLandingPage() {
     <VoicePageProvider>
       <VoiceAssistantProvider>
         <LandingContent />
+        <VoiceAssistantPanel />
       </VoiceAssistantProvider>
     </VoicePageProvider>
   );

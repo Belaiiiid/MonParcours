@@ -10,6 +10,7 @@ import { FloatingActionBubbles } from '@/features/chatbot/components/FloatingAct
 import { FloatingChatbot } from '@/features/chatbot/components/FloatingChatbot';
 import { VoicePageProvider } from '@/features/voice/context/VoicePageContext';
 import { VoiceAssistantProvider } from '@/features/voice/components/VoiceAssistantProvider';
+import { VoiceAssistantPanel } from '@/features/voice/components/VoiceAssistantPanel';
 import { cn } from '@/lib/utils';
 import { useSessionStore } from '@/store/sessionStore';
 import { useUiStore } from '@/store/uiStore';
@@ -94,6 +95,10 @@ export function AppShell({
           <FloatingChatbot />
           <FloatingActionBubbles />
         </>
+      )}
+      {/* Standalone voice UI (citizen only) */}
+      {role === 'citizen' && (
+        <VoiceAssistantPanel />
       )}
     </div>
       </VoiceAssistantProvider>

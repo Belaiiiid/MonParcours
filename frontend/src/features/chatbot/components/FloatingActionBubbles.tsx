@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { APP_CONFIG } from '@/app/config/app';
 import { ROUTES } from '@/app/router/paths';
 import { useChatbotUiStore } from '@/features/chatbot/store/chatbotUiStore';
+import { useVoiceUiStore } from '@/features/voice/store/voiceUiStore';
 import { cn } from '@/lib/utils';
 
 interface BubbleSpec {
@@ -218,6 +219,8 @@ export function FloatingActionBubbles({
   orbit?: boolean;
 }) {
   const isOpen = useChatbotUiStore((state) => state.isOpen);
+  const voiceOpen = useVoiceUiStore((s) => s.isOpen);
+  const openVoice = useVoiceUiStore((s) => s.open);
   const toggle = useChatbotUiStore((state) => state.toggle);
   const location = useLocation();
   const isFinePointer = useFinePointer();
@@ -228,9 +231,15 @@ export function FloatingActionBubbles({
   // la souris ou qu'on atteint au clavier ne doit pas se dérober.
   const [isEngaged, setIsEngaged] = useState(false);
 
-  if (hidden || isOpen || location.pathname === ROUTES.chat) return null;
+  if (hidden || isOpen || voiceOpen || location.pathname === ROUTES.chat) return null;
 
   const bubbles: BubbleSpec[] = [
+    {
+      label: 'Assistant vocal',
+      iconSrc: '/mic.svg',
+      onClick: openVoice,
+      className: 'bg-white text-white',
+    },
     {
       label: 'Discuter sur WhatsApp',
       iconSrc: '/whatsapp-logo.svg',

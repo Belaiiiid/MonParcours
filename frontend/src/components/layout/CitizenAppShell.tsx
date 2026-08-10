@@ -11,6 +11,7 @@ import { FloatingActionBubbles } from '@/features/chatbot/components/FloatingAct
 import { FloatingChatbot } from '@/features/chatbot/components/FloatingChatbot';
 import { LandingHeader } from '@/features/chatbot/components/landing/LandingHeader';
 import { VoiceAssistantProvider } from '@/features/voice/components/VoiceAssistantProvider';
+import { VoiceAssistantPanel } from '@/features/voice/components/VoiceAssistantPanel';
 import { VoicePageProvider } from '@/features/voice/context/VoicePageContext';
 import { cn } from '@/lib/utils';
 import { useSessionStore } from '@/store/sessionStore';
@@ -119,6 +120,8 @@ export function CitizenAppShell({
 
           <FloatingChatbot />
           <FloatingActionBubbles />
+          {/* Standalone voice UI for citizen */}
+          <VoiceAssistantPanel />
         </div>
       </VoiceAssistantProvider>
     </VoicePageProvider>
