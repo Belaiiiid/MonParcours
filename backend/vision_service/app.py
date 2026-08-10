@@ -15,7 +15,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from torch.nn import functional as F
 
 ROOT = Path(__file__).resolve().parent.parent
-TRUFOR_SRC = Path(os.getenv("TRUFOR_SRC", ROOT / "third_party" / "trufor" / "test_docker" / "src"))
+TRUFOR_SRC = Path(os.getenv("TRUFOR_SRC", ROOT.parent / "third_party" / "trufor" / "test_docker" / "src"))
 WEIGHTS = Path(os.getenv("TRUFOR_WEIGHTS", ROOT / "vision_service" / "weights" / "weights" / "trufor.pth.tar"))
 MAX_SIDE = int(os.getenv("TRUFOR_MAX_SIDE", "1024"))
 THRESHOLD = float(os.getenv("TRUFOR_LOCALIZATION_THRESHOLD", "0.5"))

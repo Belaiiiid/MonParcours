@@ -58,7 +58,7 @@ Le proxy de dev Vite redirige automatiquement `/api/*` vers `http://localhost:80
 ### Service vision (optionnel)
 
 ```bash
-cd vision_service
+cd backend/vision_service
 # Installez selon requirements-cuda.txt si GPU, sinon fallback CPU si prévu
 python -m venv .venv && .venv/Scripts/activate
 pip install -r requirements-cuda.txt
