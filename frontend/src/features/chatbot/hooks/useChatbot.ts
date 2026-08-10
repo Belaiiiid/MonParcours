@@ -36,6 +36,15 @@ export interface ChatbotController {
    * donc pas être pris pour une nouvelle demande.
    */
   selectOption: (option: string) => void;
+  /**
+   * Efface le fil persisté, ou la seule journée demandée (`AAAA-MM-JJ`).
+   *
+   * Définitif côté serveur. Le fil affiché est recalculé depuis la réponse du
+   * backend plutôt que retiré à l'aveugle ici : si la suppression échoue, la
+   * conversation reste telle qu'elle est au lieu de disparaître de l'écran
+   * sans avoir disparu de la base.
+   */
+  deleteHistory: (day?: string) => Promise<void>;
 }
 
 /**
@@ -74,6 +83,14 @@ export function useChatbot(context?: ChatbotContext): ChatbotController {
   const [messages, setMessages] = useState<ChatbotMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  /* La suppression est definitive : elle ne touche l'ecran qu'une fois le
+     serveur d'accord, et relit le fil pour refleter exactement ce qu'il reste. */
+  const deleteHistory = useCallback(async (day?: string) => {
+    await chatbotService.deleteHistory(day);
+    const remaining = await chatbotService.getHistory();
+    setMessages(remaining.map(fromHistory));
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -206,5 +223,5 @@ export function useChatbot(context?: ChatbotContext): ChatbotController {
     [ask],
   );
 
-  return { messages, isSending, error, send, selectOption };
+  return { messages, isSending, error, send, selectOption, deleteHistory };
 }

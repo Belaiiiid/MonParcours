@@ -168,7 +168,7 @@ export function FloatingChatbot() {
           aria-modal="false"
           tabIndex={-1}
           onKeyDown={handlePanelKeyDown}
-          className="fixed bottom-5 right-5 z-50 flex h-[min(680px,85vh)] w-[min(400px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-soft focus:outline-none"
+          className="fixed bottom-4 right-5 z-50 flex h-[min(620px,74vh)] w-[min(400px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-soft focus:outline-none"
         >
           <header className="flex items-center justify-between border-b border-border bg-ai px-4 py-3 text-primary-foreground">
             <span className="flex items-center gap-2 text-label-md">
@@ -218,7 +218,11 @@ export function FloatingChatbot() {
           </header>
 
           {view === 'history' ? (
-            <ConversationHistory messages={controller.messages} onResume={resumeConversation} />
+            <ConversationHistory
+              messages={controller.messages}
+              onResume={resumeConversation}
+              onDelete={controller.deleteHistory}
+            />
           ) : (
             <>
               {deepLink && (

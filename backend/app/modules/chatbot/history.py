@@ -14,7 +14,9 @@ them — the citizen's explicit requirement, not just an omission.
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from datetime import date, datetime, time, timedelta, timezone
+
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 # Le logger du projet, comme le reste du paquet. Ce module utilisait `logging` de la
@@ -39,6 +41,44 @@ def get_history(db: Session, user_id: int) -> list[ChatHistoryMessageSchema]:
         ChatHistoryMessageSchema.model_validate(message)
         for message in db.execute(stmt).scalars().all()
     ]
+
+
+def delete_history(db: Session, user_id: int, day: date | None = None) -> int:
+    """Efface le fil de ce citoyen, ou la seule journée demandée.
+
+    Une suppression réelle, pas un marquage : ce que le citoyen efface de son
+    historique doit disparaître de la base. C'est ce que promet le bouton, et
+    ce qu'attend le RGPD d'un droit à l'effacement exercé sur ses propres
+    échanges.
+
+    Bornée à `user_id` dans tous les cas — la clause n'est jamais optionnelle,
+    sans quoi un `day` seul effacerait la journée de tout le monde.
+
+    `day` est une date civile, interprétée en UTC comme l'est `created_at`. Un
+    citoyen qui efface « hier » depuis un autre fuseau peut donc voir la coupure
+    tomber à quelques heures près ; le jour est déjà groupé côté client sur la
+    même base, les deux restent cohérents.
+
+    Retourne le nombre de messages supprimés, pour la trace.
+    """
+    stmt = delete(ChatbotMessage).where(ChatbotMessage.user_id == user_id)
+
+    if day is not None:
+        start = datetime.combine(day, time.min, tzinfo=timezone.utc)
+        stmt = stmt.where(
+            ChatbotMessage.created_at >= start,
+            ChatbotMessage.created_at < start + timedelta(days=1),
+        )
+
+    deleted = db.execute(stmt).rowcount or 0
+    db.commit()
+    logger.info(
+        "chatbot.history.deleted user_id=%s day=%s messages=%s",
+        user_id,
+        day.isoformat() if day else "all",
+        deleted,
+    )
+    return deleted
 
 
 def record_turn(
