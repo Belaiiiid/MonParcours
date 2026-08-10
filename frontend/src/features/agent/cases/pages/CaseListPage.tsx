@@ -68,6 +68,7 @@ export default function CaseListPage() {
             }
             empty={{
               icon: Inbox,
+              tone: 'institutional',
               title: search ? 'Aucun résultat' : 'Aucun dossier',
               description: search
                 ? `Aucun dossier ne correspond à « ${search} ».`

@@ -92,6 +92,9 @@ const config: Config = {
         ai: {
           DEFAULT: token('--accent-ai'),
           surface: token('--accent-ai-surface'),
+          // Un cran plus soutenu que `surface`, qui est presque blanc : la
+          // teinte des pastilles qui doivent se voir posées *sur* une carte.
+          container: token('--accent-ai-container'),
         },
 
         // Surfaces (tonal layering)
@@ -165,6 +168,8 @@ const config: Config = {
         action: {
           DEFAULT: token('--admtl-action'),
         },
+        // Aplat rouge de la deconnexion — voir `--admtl-signout`.
+        signout: token('--admtl-signout'),
         marianne: {
           DEFAULT: token('--admtl-marianne'),
           foreground: token('--admtl-marianne-foreground'),

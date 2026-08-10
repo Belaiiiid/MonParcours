@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
+import { ROUTES } from '@/app/router/paths';
 import { CitizenFooter } from '@/components/layout/CitizenFooter';
 import { cn } from '@/lib/utils';
 import { SkipLink } from '@/components/layout/SkipLink';
@@ -24,6 +26,7 @@ import { VoiceStatusStrip } from '@/features/voice/components/VoiceStatusStrip';
 import { VoicePageProvider, useVoicePage } from '@/features/voice/context/VoicePageContext';
 import { useVoiceComposer } from '@/features/voice/hooks/useVoiceComposer';
 import { useVoiceStore } from '@/features/voice/store/voiceStore';
+import { useSessionStore } from '@/store/sessionStore';
 
 type AssistMode = 'voice' | 'text';
 
@@ -51,6 +54,19 @@ type AssistMode = 'voice' | 'text';
  * this route too, instead of only inside `AppShell`.
  */
 export default function PublicLandingPage() {
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const role = useSessionStore((state) => state.role);
+
+  /*
+   * Dernière porte de l'espace citoyen, et la seule qui ne passe pas par
+   * `CitizenAppShell` : un agent connecté est renvoyé au back-office ici
+   * aussi, sans quoi le verrou posé sur la coque se contournerait par
+   * l'accueil.
+   */
+  if (isAuthenticated && (role === 'agent' || role === 'admin')) {
+    return <Navigate to={ROUTES.agent} replace />;
+  }
+
   return (
     <VoicePageProvider>
       <VoiceAssistantProvider>

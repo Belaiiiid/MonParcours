@@ -52,6 +52,9 @@ export function Header() {
   // Accessibility preferences are a citizen-profile concern — not shown here for
   // agents, keeping their account view minimal (name / e-mail / role).
   const isAgent = role === 'agent';
+  /* Le rôle affiché sous le nom. Rien pour le citoyen : sur son espace, « vous »
+     est le seul rôle qui existe, l'écrire serait du remplissage. */
+  const roleLabel = role === 'agent' ? 'Agent CAF' : role === 'admin' ? 'Administration' : null;
   const profileTo = isAgent ? AGENT_ROUTES.profile : ROUTES.profile;
   const notificationsTo = isAgent ? AGENT_ROUTES.notifications : ROUTES.portalNotifications;
   const settingsTo = isAgent ? AGENT_ROUTES.settings : ROUTES.settings;
@@ -67,7 +70,10 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-header items-center gap-4 border-b border-border bg-surface px-margin-mobile md:px-gutter">
+    // Alignee sur `CitizenHeader` : pas de filet bas — sur le fond clair des
+    // pages il se lit comme une ligne parasite au defilement — c'est l'ombre
+    // douce et le flou d'arriere-plan qui detachent la barre.
+    <header className="sticky top-0 z-30 flex h-header items-center gap-4 bg-background/90 px-margin-mobile shadow-soft backdrop-blur md:px-gutter">
       <Button
         variant="ghost"
         size="icon"
@@ -131,27 +137,38 @@ export function Header() {
           <HelpCircle aria-hidden="true" />
         </Button>
 
-        <span aria-hidden="true" className="mx-2 hidden h-8 w-px bg-border sm:block" />
+        <span aria-hidden="true" className="mx-2 hidden h-8 w-px bg-border/60 sm:block" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-3 rounded-lg p-1 transition-colors hover:bg-surface-container"
+              className="flex items-center gap-3 rounded-full p-1 transition-colors hover:bg-brand-soft"
               aria-label={displayName ? `Mon espace — ${displayName}` : 'Mon espace'}
             >
               <span className="hidden text-right sm:block">
                 {displayName ? (
-                  <span className="block text-label-md leading-none text-on-surface">
-                    {displayName}
-                  </span>
+                  <>
+                    <span className="block text-label-md leading-none text-ink">
+                      {displayName}
+                    </span>
+                    {/* Qui l'on est, pas seulement comment on s'appelle : deux
+                        agents partagent la file, et l'écran ne dit nulle part
+                        ailleurs sous quel rôle la session est ouverte. */}
+                    {roleLabel && (
+                      <span className="mt-1 block text-label-sm leading-none text-muted-foreground">
+                        {roleLabel}
+                      </span>
+                    )}
+                  </>
                 ) : (
                   <Skeleton className="mb-1 h-3 w-24" />
                 )}
-                <span className="block text-label-sm text-on-surface-variant">Mon compte</span>
               </span>
-              <Avatar>
-                <AvatarFallback>
+              {/* Pastille bleu pale bordee, accordee a la vue d'ensemble du
+                  tableau de bord — meme famille de bleus que le panneau. */}
+              <Avatar className="border border-[color:var(--agent-overview-border)]">
+                <AvatarFallback className="bg-[color:var(--agent-overview-border)] font-semibold text-[color:var(--agent-overview-icon)]">
                   {displayName ? (
                     getInitials(displayName)
                   ) : (
@@ -161,20 +178,20 @@ export function Header() {
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Mon espace</DropdownMenuLabel>
-            <DropdownMenuItem asChild>
+          <DropdownMenuContent align="end" className="border-border/60 bg-card p-1.5 shadow-soft">
+            <DropdownMenuLabel className="text-muted-foreground">Mon espace</DropdownMenuLabel>
+            <DropdownMenuItem asChild className="focus:bg-brand-soft focus:text-brand">
               <Link to={profileTo}>Mon profil</Link>
             </DropdownMenuItem>
             {!isAgent && (
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="focus:bg-brand-soft focus:text-brand">
                 <Link to={ROUTES.profileAccessibility}>Accessibilité</Link>
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="focus:bg-brand-soft focus:text-brand">
               <Link to={settingsTo}>Paramètres</Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border/60" />
             <DropdownMenuItem destructive onSelect={handleLogout}>
               Déconnexion
             </DropdownMenuItem>

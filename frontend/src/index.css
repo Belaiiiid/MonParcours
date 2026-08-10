@@ -28,9 +28,13 @@
     /* AI accent */
     --accent-ai: #003593;
     --accent-ai-surface: #f6fbff;
+    /* Bleu pâle des pastilles posées sur une carte blanche : `surface` y est
+       presque invisible, la pastille se lisant alors comme un trou. Mesuré à
+       10,9:1 pour `--accent-ai` par-dessus. */
+    --accent-ai-container: #eaf0fb;
 
     /* Surfaces */
-    --background: #f9f9f9;
+    --background: #f3f4f9;
     --surface: #f9f9f9;
     --surface-container-lowest: #ffffff;
     --surface-container-low: #f3f3f4;
@@ -164,6 +168,10 @@
      * which is the tight pairing, not white.
      */
     --admtl-action: #102a74;
+    /* Le rouge de la deconnexion dans le rail du back-office. `destructive`
+       est calibre pour du texte sur fond clair et disparait sur le panneau
+       navy ; ce rouge vif y tient 3.0:1 : sous le seuil AA de 4.5:1, choix assume. */
+    --admtl-signout: #ed2633;
     --admtl-brand: #3158b0;
     --admtl-brand-soft: oklch(0.94 0.03 250);
     --admtl-marianne: oklch(0.32 0.13 265);
@@ -209,7 +217,10 @@
    * so they keep their current colours and fonts untouched.
    */
   .citizen-scope {
-    --background: oklch(1 0 0);
+    /* Meme fond que le reste de l'interface : le portail citoyen etait le seul
+       ecran a rester en blanc pur, ce qui coupait la continuite avec le
+       back-office et les pages publiques. */
+    --background: #f3f4f9;
     --surface: oklch(0.985 0.008 250);
     --border-subtle: oklch(0.929 0.013 255.508);
     --text-muted: oklch(0.52 0.046 257.417);
@@ -224,24 +235,16 @@
   }
 
   /*
-   * Agent back-office — squared corners on every element, matching the
-   * statistics page's stat tiles. Retuning the scale here squares cards,
-   * tables, panels, inputs and buttons at once, so a component added later
-   * cannot drift back to rounded.
+   * Agent back-office.
    *
-   * A deliberate departure from docs/design-system.md §6.1, which gives one
-   * radius scale to the whole platform: the back-office is an instruction
-   * desk, not a citizen-facing surface. Colours and typefaces are untouched —
-   * only the corner geometry differs. `rounded-full` stays round (avatars,
-   * status dots).
+   * Les angles droits ont ete retires : le back-office reprend l'echelle de
+   * rayons de la plateforme (docs/design-system.md §6.1), comme le portail
+   * citoyen. La geometrie carree distinguait le poste d'instruction d'une
+   * surface citoyenne, mais l'espace agent porte desormais la meme coque et
+   * les memes cartes — deux angles differents pour un meme composant se
+   * lisaient comme deux systemes.
    */
   .agent-scope {
-    --radius-sm: 1px;
-    --radius-md: 1px;
-    --radius-lg: 1px;
-    --radius-xl: 1px;
-    --radius-2xl: 1px;
-
     /*
      * L'élément discret posé *sur* la surface navy inversée (`AgentBanner`) :
      * le filet qui sépare la barre d'avancement, et le bloc de chargement qui
@@ -261,6 +264,80 @@
      * intitulés de la barre séparent déjà.
      */
     --agent-subtle-on-primary: #3d5180;
+
+    /*
+     * Le plan de travail n'est plus le gris neutre de l'application.
+     *
+     * Le back-office est fait de cartes blanches ; sur un gris neutre leur bord
+     * ne se lit qu'à la bordure, et l'écran entier tire au gris d'imprimante.
+     * Ce bleu-gris très pâle est de la même famille que le navy du rail : les
+     * cartes s'en détachent, et la page reste froide, jamais grise.
+     */
+    --background: #f3f4f9;
+    --surface: #f3f4f9;
+    /* Bordure de carte assortie au fond, plutôt que le gris neutre. */
+    --border-subtle: #e4e9f2;
+
+    /*
+     * Élévation des cartes du poste d'instruction : une ombre portée large et
+     * teintée du navy institutionnel, là où `shadow-soft` (noir, 3 px) date du
+     * temps où le fond était blanc. Déclarée en jeton, la règle n°1 de la charte
+     * interdisant la valeur en dur dans les composants.
+     */
+    --agent-card-shadow: 0 4px 20px rgb(9 31 78 / 0.06);
+
+    /*
+     * Les deux valeurs posées *sur* le navy du bandeau : la pastille derrière
+     * chaque pictogramme de compteur, et le filet qui sépare les compteurs.
+     * Toutes deux tirées de `--primary-fixed-dim` (#b4c5ff), la teinte claire
+     * de la famille — un blanc translucide y virerait au gris.
+     *
+     * Purement décoratives : elles ne portent aucune information que le nombre
+     * et son intitulé ne portent déjà, et n'ont donc pas de seuil de contraste
+     * à tenir.
+     */
+    --agent-tile-on-primary: rgb(180 197 255 / 0.14);
+    --agent-divider-on-primary: rgb(180 197 255 / 0.16);
+
+    /*
+     * Le fond de page du poste d'instruction : celui de toute l'interface, pour
+     * que les cartes blanches s'en detachent sans avoir a forcer leur ombre.
+     */
+    --background: #f3f4f9;
+
+    /*
+     * La vue d'ensemble.
+     *
+     * Elle etait posee sur le navy inverse (`AgentBanner`, qui sert toujours
+     * l'instruction et la decision). Deux blocs sombres — le rail et ce
+     * bandeau — se disputaient le premier regard, alors qu'un seul doit porter
+     * l'identite institutionnelle : le rail. Le panneau passe donc en bleu
+     * clair, assez distinct pour rester le point d'entree de l'ecran, assez
+     * leger pour laisser la file d'instruction respirer sur du blanc.
+     *
+     * La hierarchie visee, du plus sombre au plus clair : rail navy, vue
+     * d'ensemble bleu pale, cartes blanches, fond bleu-gris.
+     *
+     * Contrastes sur `--agent-overview-surface` : le nombre 11.4:1, l'intitule
+     * 4.9:1 — les deux au-dessus du seuil AA.
+     */
+    --agent-overview-surface: #e8f0fc;
+    --agent-overview-border: #dce3f5;
+    --agent-overview-divider: #cfdcf3;
+    --agent-overview-ink: #0f2b74;
+    --agent-overview-ink-muted: #52678f;
+    --agent-overview-tile: #ffffff;
+    --agent-overview-icon: #003593;
+
+    /*
+     * L'encre des files d'instruction : reference, allocataire, date, attente.
+     *
+     * Le tableau melait trois valeurs — `text-on-surface` pour les unes,
+     * `text-on-surface-variant` pour les autres — ce qui hierarchisait des
+     * colonnes qui se lisent ensemble, ligne par ligne. Une seule encre bleue
+     * les remet au meme rang. 12.6:1 sur blanc.
+     */
+    --agent-field-ink: #132f62;
   }
 
   /*
@@ -271,6 +348,20 @@
    */
   .a11y-high-contrast .agent-scope {
     --agent-subtle-on-primary: #7f92c4;
+    /* La préférence blanchit le fond et fonce les bordures ; sans ce rappel,
+       les valeurs du back-office déclarées ci-dessus l'emporteraient, la règle
+       de `.a11y-high-contrast` étant posée plus haut dans l'arbre. */
+    --background: #ffffff;
+    --surface: #ffffff;
+    --border-subtle: #757680;
+    --agent-tile-on-primary: rgb(180 197 255 / 0.28);
+    --agent-divider-on-primary: rgb(180 197 255 / 0.4);
+    /* La vue d'ensemble suit : fond blanc, filets et encre pousses d'un cran. */
+    --agent-overview-surface: #ffffff;
+    --agent-overview-border: #757680;
+    --agent-overview-divider: #757680;
+    --agent-overview-ink: #001a4d;
+    --agent-overview-ink-muted: #33415c;
   }
 
   /*
@@ -322,26 +413,100 @@
 
 @layer components {
   /*
-   * Le fond des surfaces d'assistant : trois tons froids en degrade vertical,
-   * plus trois halos radiaux — bleu en haut a gauche, rouge en haut a droite,
-   * bleu au centre bas.
+   * Le fond des surfaces d'assistant : un degrade diagonal, du bleu tres pale
+   * en haut a gauche vers un bleu plus soutenu en bas a droite.
    *
-   * Volontairement a la limite du perceptible. Une conversation qui n'a pas
-   * encore commence laisse un grand vide ; un blanc plat y donne l'impression
-   * d'un ecran non charge, alors que ces halos suffisent a installer une
-   * profondeur derriere le titre et les cartes sans leur disputer l'attention.
+   * Une conversation qui n'a pas encore commence laisse un grand vide ; un
+   * blanc plat y donne l'impression d'un ecran non charge, alors qu'un degre
+   * de couleur suffit a installer une profondeur derriere le titre et les
+   * cartes. Les cartes d'amorce etant translucides (`bg-white/75`), elles s'y
+   * posent en verre depoli plutot qu'en aplats decoupes.
    *
-   * En CSS plutot qu'en style en ligne : les trois hotes (accueil public,
-   * Aide IA, Coach CV) le posent sur des elements differents — une <main>,
-   * une <section>, une carte — et une classe se passe partout ou un objet de
-   * style demanderait a chacun d'exposer un `style`.
+   * En CSS plutot qu'en style en ligne : les quatre hotes (accueil public,
+   * Aide IA, Coach CV, Assistant IA agent) le posent sur des elements
+   * differents — une <main>, une <section>, deux cartes — et une classe se
+   * passe partout ou un objet de style demanderait a chacun d'exposer un
+   * `style`.
    */
   .assistant-backdrop {
-    background-image:
-      radial-gradient(60rem 40rem at 0% 0%, rgba(30, 58, 138, 0.1), transparent 60%),
-      radial-gradient(50rem 35rem at 100% 0%, rgba(200, 16, 46, 0.06), transparent 60%),
-      radial-gradient(60rem 40rem at 50% 100%, rgba(30, 58, 138, 0.08), transparent 65%),
-      linear-gradient(180deg, #f5f7fc 0%, #eef1f9 55%, #e9edf7 100%);
+    background-image: linear-gradient(135deg, #d7e7fa 0%, #afcbf0 100%);
+  }
+
+  /*
+   * Le poste d'instruction n'est pas la vitrine publique.
+   *
+   * Là, le dégradé bleu porte l'accueil d'un visiteur ; ici, l'agent revient
+   * sur cet écran vingt fois par jour, entre deux dossiers, et une couleur
+   * pleine hauteur devient une lampe allumée dans la pièce. D'où le fond de
+   * page, sans dégradé ni lueur : c'est la barre de saisie et les amorces qui
+   * portent l'écran, pas le fond. Le rail reste le seul bloc sombre.
+   */
+  .agent-assistant-backdrop {
+    background-color: var(--background);
+    background-image: none;
+  }
+
+  /*
+   * Surfaces de la variante `spotlight` de <ChatWindow /> — amorces, composeur,
+   * bouton d'envoi.
+   *
+   * En jetons plutôt qu'en classes figées : la fenêtre est la même partout
+   * (une seule surface de conversation dans le produit), mais elle se pose
+   * tantôt sur le dégradé bleu de l'accueil public, tantôt sur le quasi-blanc
+   * du poste d'instruction. Les valeurs ci-dessous sont celles de l'accueil ;
+   * l'espace agent les redéclare plus bas, et personne ne duplique le composant.
+   */
+  :root {
+    --chat-card-bg: rgb(255 255 255 / 0.75);
+    --chat-card-bg-hover: rgb(255 255 255 / 0.75);
+    --chat-card-border: rgb(255 255 255 / 0.7);
+    --chat-card-border-hover: rgb(255 255 255 / 0.7);
+    --chat-card-radius: 14px;
+    --chat-card-shadow: 0 4px 16px -6px rgb(15 23 42 / 0.18);
+    --chat-card-shadow-hover: 0 12px 28px -10px rgb(15 23 42 / 0.28);
+    --chat-card-icon-bg: #eef2fb;
+    --chat-card-icon-fg: #1e3a8a;
+
+    --chat-composer-bg: #ffffff;
+    --chat-composer-border: transparent;
+    --chat-composer-border-focus: #1e3a8a;
+    --chat-composer-radius: 30px;
+    --chat-composer-shadow: 0 8px 28px -10px rgb(15 23 42 / 0.25);
+
+    --chat-send-bg: linear-gradient(135deg, #1e3a8a, #14265e);
+    --chat-send-shadow: 0 4px 12px -4px rgb(20 38 94 / 0.6);
+
+    --chat-disclaimer-size: 0.875rem;
+    --chat-title-ink: #14265e;
+  }
+
+  /*
+   * L'assistant du poste d'instruction : cartes blanches franches et non plus
+   * en verre dépoli (il n'y a plus de dégradé à laisser transparaître), filets
+   * bleu pâle, et un bouton d'envoi d'un seul bleu — le dégradé navy de
+   * l'accueil se lisait comme un bouton de page d'accueil.
+   */
+  .agent-assistant {
+    --chat-card-bg: #ffffff;
+    --chat-card-bg-hover: #f6f9fe;
+    --chat-card-border: #dce5f2;
+    --chat-card-border-hover: #b9cbe8;
+    --chat-card-radius: 12px;
+    --chat-card-shadow: 0 2px 10px rgb(15 43 116 / 0.04);
+    --chat-card-shadow-hover: 0 8px 20px -6px rgb(15 43 116 / 0.12);
+    --chat-card-icon-bg: #eaf0fb;
+    --chat-card-icon-fg: #003593;
+
+    --chat-composer-border: #d5dfed;
+    --chat-composer-border-focus: #003593;
+    --chat-composer-radius: 18px;
+    --chat-composer-shadow: 0 6px 24px rgb(15 43 116 / 0.08);
+
+    --chat-send-bg: #003593;
+    --chat-send-shadow: 0 4px 12px -4px rgb(0 53 147 / 0.45);
+
+    --chat-disclaimer-size: 0.75rem;
+    --chat-title-ink: #0f2b74;
   }
 
   /* Section titles: label-md, uppercase, wide tracking (see analysis §3.2). */

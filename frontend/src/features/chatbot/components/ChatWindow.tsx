@@ -1,4 +1,14 @@
-import { Clock, FileText, Home, Mic, Paperclip, Send, type LucideIcon } from 'lucide-react';
+import {
+  ChevronRight,
+  Clock,
+  FileText,
+  Home,
+  Mic,
+  Paperclip,
+  Send,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -42,6 +52,16 @@ const DEFAULT_STARTER_ICONS: LucideIcon[] = [Home, FileText, Clock];
 
 /** Variante d'apparence — voir `ChatWindowProps.variant`. */
 export type ChatWindowVariant = 'default' | 'spotlight';
+
+/**
+ * Disposition d'une amorce en variante `spotlight`.
+ *
+ * `stack` — pictogramme au-dessus de l'intitulé, carte centrée : trois tuiles
+ * de même poids, pour un accueil où elles sont le sujet de l'écran.
+ * `row` — pictogramme à gauche, intitulé, chevron à droite : une ligne d'action
+ * plus compacte, pour un poste de travail où la barre de saisie prime.
+ */
+export type StarterLayout = 'stack' | 'row';
 
 export interface ChatWindowProps {
   controller: ChatbotController;
@@ -89,6 +109,41 @@ export interface ChatWindowProps {
    * regarde.
    */
   variant?: ChatWindowVariant;
+  /**
+   * Pictogrammes des amorces, en variante `spotlight` — index par index, dans
+   * l'ordre de `starterQuestions`.
+   *
+   * Un assistant qui remplace les amorces par les siennes doit pouvoir
+   * remplacer les images qui vont avec : une maison et une horloge, choisies
+   * pour l'APL, ne disent rien d'une recherche reglementaire.
+   */
+  starterIcons?: LucideIcon[];
+  /**
+   * Invitation posée au-dessus des amorces, en variante `spotlight`.
+   *
+   * Optionnelle : l'accueil public pose déjà la sienne dans le titre de la
+   * page, et la répéter ici ferait deux fois la même question. Un poste de
+   * travail, lui, garde son titre d'écran (« Assistant IA ») et a besoin de
+   * cette seconde ligne pour dire ce que la fenêtre attend.
+   */
+  starterTitle?: string;
+  /** Sous-titre de `starterTitle` — ce que l'assistant sait faire. Ignoré sans lui. */
+  starterLead?: string;
+  /** Disposition des amorces en `spotlight` — voir {@link StarterLayout}. */
+  starterLayout?: StarterLayout;
+  /**
+   * Mascotte posée au-dessus de `starterTitle`, à la place de la pastille par
+   * défaut. Ignorée sans lui.
+   */
+  starterMascotSrc?: string;
+  /**
+   * Pictogramme posé à gauche du champ de saisie, et second pictogramme devant
+   * l'avertissement. Purement indicatifs : ils nomment la nature de la barre
+   * (on parle) et celle de la mention (une réserve), là où un poste de travail
+   * empile plusieurs zones de saisie sur un même écran.
+   */
+  composerIcon?: LucideIcon;
+  disclaimerIcon?: LucideIcon;
   /** Posé sur la <section> — l'hôte décide du fond et des marges de la fenêtre. */
   className?: string;
   /** Placeholder de la barre de saisie. */
@@ -112,26 +167,54 @@ function StarterCard({
   icon: Icon,
   label,
   onClick,
+  layout = 'stack',
 }: {
   icon?: LucideIcon;
   label: string;
   onClick: () => void;
+  layout?: StarterLayout;
 }) {
+  const isRow = layout === 'row';
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex h-full w-full flex-col items-center gap-3 rounded-[14px] border border-white/70 bg-white/75 p-4 text-center shadow-[0_4px_16px_-6px_rgba(15,23,42,0.18)] backdrop-blur-[6px] transition-[transform,box-shadow] duration-200 ease-standard hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-10px_rgba(15,23,42,0.28)]"
+      className={cn(
+        'flex h-full w-full backdrop-blur-[6px]',
+        isRow ? 'items-center gap-3 p-3 text-left' : 'flex-col items-center gap-3 p-4 text-center',
+        'rounded-[var(--chat-card-radius)] border border-[color:var(--chat-card-border)] bg-[var(--chat-card-bg)] shadow-[var(--chat-card-shadow)]',
+        'transition-[transform,box-shadow,background-color,border-color] duration-200 ease-standard',
+        'hover:-translate-y-0.5 hover:border-[color:var(--chat-card-border-hover)] hover:bg-[var(--chat-card-bg-hover)] hover:shadow-[var(--chat-card-shadow-hover)]',
+      )}
     >
       {Icon && (
         <span
           aria-hidden="true"
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#eef2fb] text-[#1e3a8a]"
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded-lg bg-[color:var(--chat-card-icon-bg)] text-[color:var(--chat-card-icon-fg)]',
+            isRow ? 'size-10' : 'size-8',
+          )}
         >
-          <Icon className="size-[18px]" strokeWidth={1.75} />
+          <Icon className={isRow ? 'size-5' : 'size-[18px]'} strokeWidth={1.75} />
         </span>
       )}
-      <span className="text-body-sm font-medium leading-snug text-ink">{label}</span>
+      <span
+        className={cn(
+          'font-medium leading-snug text-ink',
+          isRow ? 'flex-1 text-body-md' : 'text-body-sm',
+        )}
+      >
+        {label}
+      </span>
+      {/* Le chevron dit que l'amorce part au clic, là où la carte empilée le dit
+          par sa forme de tuile. Décoratif : l'intitulé porte déjà l'action. */}
+      {isRow && (
+        <ChevronRight
+          className="size-4 shrink-0 text-on-surface-variant/60"
+          aria-hidden="true"
+        />
+      )}
     </button>
   );
 }
@@ -148,6 +231,13 @@ export function ChatWindow({
   onAttachFile,
   emptyHint = 'Posez une question pour démarrer un échange avec l’assistant.',
   variant = 'default',
+  starterIcons = DEFAULT_STARTER_ICONS,
+  starterTitle,
+  starterLead,
+  starterLayout = 'stack',
+  starterMascotSrc,
+  composerIcon: ComposerIcon,
+  disclaimerIcon: DisclaimerIcon,
   className,
   composerPlaceholder = 'Posez votre question ici…',
   attachSuggestion,
@@ -254,7 +344,16 @@ export function ChatWindow({
           )}
         </ul>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        <div
+          className={cn(
+            'flex flex-1 flex-col items-center justify-center gap-6',
+            // Le bloc d'accueil remonte : centre dans la hauteur, il tombait
+            // trop bas sur un grand ecran, loin du titre de la page qui
+            // l'annonce. Le rembourrage bas reduit la zone de centrage, donc
+            // deplace le contenu vers le haut sans le decoller du composeur.
+            starterTitle && 'pb-24 sm:pb-32',
+          )}
+        >
           {/* État vide écrit ici plutôt qu'avec `EmptyState` : la mascotte y
               est le sujet, pas un pictogramme dans une pastille de 64 px —
               ce composant partagé contraint la taille de son icône.
@@ -270,6 +369,41 @@ export function ChatWindow({
             </div>
           )}
 
+          {isSpotlight && starterTitle && (
+            /* L'invitation, en toutes lettres : sur un poste de travail, c'est
+               elle qui dit ce que la fenêtre attend — une mascotte, à cette
+               place, ne disait rien que les amorces ne disent déjà. */
+            <div className="max-w-2xl px-4 text-center">
+              {/* Ouverture : elle signe la surface comme une surface
+                  d'assistant, ce que le titre seul ne fait pas sur un écran de
+                  back-office où tout se ressemble. Décorative — la mascotte
+                  quand l'hôte en fournit une, sinon une pastille. */}
+              {starterMascotSrc ? (
+                <img
+                  src={starterMascotSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="mx-auto mb-5 h-20 w-auto object-contain"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-[color:var(--chat-card-icon-bg)] text-[color:var(--chat-card-icon-fg)]"
+                >
+                  <Sparkles className="size-6" strokeWidth={1.75} />
+                </span>
+              )}
+              <h2 className="font-sans text-headline-lg-mobile font-bold leading-tight text-[color:var(--chat-title-ink)] sm:text-headline-lg">
+                {starterTitle}
+              </h2>
+              {starterLead && (
+                <p className="mx-auto mt-3 max-w-xl text-body-lg leading-relaxed text-on-surface-variant">
+                  {starterLead}
+                </p>
+              )}
+            </div>
+          )}
+
           <ul
             className={cn(
               isSpotlight
@@ -281,8 +415,9 @@ export function ChatWindow({
               isSpotlight ? (
                 <li key={question}>
                   <StarterCard
-                    icon={DEFAULT_STARTER_ICONS[index]}
+                    icon={starterIcons[index]}
                     label={question}
+                    layout={starterLayout}
                     onClick={() => submit(question)}
                   />
                 </li>
@@ -363,7 +498,7 @@ export function ChatWindow({
                 // déjà sa place, donc le passage au bleu pendant la saisie ne
                 // décale rien. C'est la pilule entière qui prend le focus, pas
                 // le champ à l'intérieur.
-                'rounded-[30px] border border-transparent bg-white pl-5 shadow-[0_8px_28px_-10px_rgba(15,23,42,0.25)] transition-colors focus-within:border-[#1e3a8a]'
+                'rounded-[var(--chat-composer-radius)] border border-[color:var(--chat-composer-border)] bg-[color:var(--chat-composer-bg)] p-2.5 pl-5 shadow-[var(--chat-composer-shadow)] transition-colors focus-within:border-[color:var(--chat-composer-border-focus)]'
               : 'rounded-xl border border-border bg-surface-lowest',
           )}
           onSubmit={(event) => {
@@ -374,6 +509,14 @@ export function ChatWindow({
           <label htmlFor="chat-input" className="sr-only">
             Votre message
           </label>
+
+          {ComposerIcon && (
+            <ComposerIcon
+              aria-hidden="true"
+              className="mb-2.5 size-5 shrink-0 text-on-surface-variant/70"
+              strokeWidth={1.75}
+            />
+          )}
           <Textarea
             id="chat-input"
             rows={1}
@@ -435,7 +578,7 @@ export function ChatWindow({
                   // aux yeux : ailleurs le micro reste une option discrète.
                   isRecording
                     ? 'bg-destructive text-destructive-foreground'
-                    : 'bg-[#eef2fb] text-[#1e3a8a] hover:bg-[#e2e9f8]',
+                    : 'bg-[color:var(--chat-card-icon-bg)] text-[color:var(--chat-card-icon-fg)] hover:brightness-95',
                 )}
               >
                 <Mic className="size-5" strokeWidth={1.75} aria-hidden="true" />
@@ -459,7 +602,7 @@ export function ChatWindow({
               type="submit"
               aria-label="Envoyer le message"
               disabled={isSending || draft.trim().length === 0}
-              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1e3a8a,#14265e)] text-white shadow-[0_4px_12px_-4px_rgba(20,38,94,0.6)] transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--chat-send-bg)] text-white shadow-[var(--chat-send-shadow)] transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               <Send className="size-5" strokeWidth={1.75} aria-hidden="true" />
             </button>
@@ -475,7 +618,10 @@ export function ChatWindow({
           )}
         </form>
 
-        <p className="mt-2 text-center text-body-sm text-on-surface-variant">
+        <p className="mt-3 flex items-center justify-center gap-2 text-center text-[length:var(--chat-disclaimer-size)] leading-snug text-on-surface-variant">
+          {DisclaimerIcon && (
+            <DisclaimerIcon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          )}
           L’assistant peut faire des erreurs. Vérifiez les informations importantes.
         </p>
       </div>

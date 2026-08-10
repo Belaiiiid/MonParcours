@@ -21,7 +21,10 @@ export function AgentBanner({ className, ...props }: AgentBannerProps) {
   return (
     <section
       className={cn(
-        'rounded-xl bg-primary px-6 py-6 text-primary-foreground sm:px-8',
+        // `rounded-2xl` comme les cartes qui l'entourent : le bandeau est la
+        // plus grande surface de l'écran, un rayon plus serré que celui des
+        // cartes posées dessous le faisait lire comme un autre système.
+        'rounded-2xl bg-primary px-6 py-6 text-primary-foreground sm:px-8',
         className,
       )}
       {...props}

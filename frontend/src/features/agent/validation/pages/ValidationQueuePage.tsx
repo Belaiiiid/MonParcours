@@ -42,6 +42,7 @@ export default function ValidationQueuePage() {
             }
             empty={{
               icon: ShieldCheck,
+              tone: 'institutional',
               title: 'Aucun dossier en attente de décision',
               description: 'Tous les dossiers instruits ont été traités.',
             }}

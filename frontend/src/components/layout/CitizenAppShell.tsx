@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { ROUTES } from '@/app/router/paths';
 import { CitizenFooter } from '@/components/layout/CitizenFooter';
@@ -47,6 +47,7 @@ export function CitizenAppShell({
   const location = useLocation();
 
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const role = useSessionStore((state) => state.role);
   // La barre publique ne coiffe la page que pour un visiteur sans session.
   const isLanding = variant === 'landing' && !isAuthenticated;
   const hideChrome = variant === 'minimal' || variant === 'landing';
@@ -61,6 +62,28 @@ export function CitizenAppShell({
    */
   const isConversationRoute =
     location.pathname === ROUTES.chat || location.pathname === ROUTES.franceTravailCvCoach;
+
+  /*
+   * Un agent connecté n'a rien à faire dans l'espace citoyen.
+   *
+   * Toutes les surfaces citoyennes passent par cette coque — dossier, suivi,
+   * assistant, profil, mais aussi la liste des administrations et le hub CAF,
+   * qui n'ont pas de `ProtectedRoute` puisqu'ils se parcourent sans compte.
+   * Le verrou est donc posé ici, en un seul endroit, plutôt que route par
+   * route où le premier ajout oublierait de le reprendre.
+   *
+   * Le contrôle porte sur le rôle de la session, pas sur le chemin : la même
+   * adresse reste ouverte à un visiteur sans compte et à un citoyen.
+   *
+   * `admin` suit `agent` — `sessionStore.toSessionRole` les range ensemble
+   * pour l'accès au back-office.
+   *
+   * `replace` : la page interdite ne doit pas rester dans l'historique, sinon
+   * le bouton Retour du navigateur y ramène en boucle.
+   */
+  if (isAuthenticated && (role === 'agent' || role === 'admin')) {
+    return <Navigate to={ROUTES.agent} replace />;
+  }
 
   return (
     <VoicePageProvider>
