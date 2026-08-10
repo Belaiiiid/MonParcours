@@ -1,7 +1,6 @@
 import { ShieldCheck } from 'lucide-react';
 
-import { SectionHeader } from '@/components/shared';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AgentPage, AsyncBoundary, CaseQueueTable } from '@/features/agent/components';
 import { useAgentCases } from '@/features/agent/hooks';
@@ -27,11 +26,12 @@ export default function ValidationQueuePage() {
 
   return (
     <AgentPage title="Validation" description="Dossiers en attente de décision.">
+      {/* Pas d'en-tête de carte : le titre de page dit déjà « Validation » et
+          son chapô « Dossiers en attente de décision ». Un troisième intitulé
+          au-dessus du tableau ne nommait rien de neuf. La légende lue par les
+          lecteurs d'écran, elle, reste portée par <CaseQueueTable />. */}
       <Card>
-        <CardHeader>
-          <SectionHeader title="En attente de décision" as="h2" />
-        </CardHeader>
-        <CardContent className="px-0">
+        <CardContent className="p-0 py-2">
           <AsyncBoundary
             resource={queue}
             fallback={

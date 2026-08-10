@@ -178,16 +178,26 @@ const SEVERITY_BAR: Record<SignalSeverity, string> = {
   faible: 'bg-outline',
 };
 
-export function CaseFraudDetectionCard() {
+export interface CaseFraudDetectionCardProps {
+  /**
+   * Drops to `h3` when the card sits inside a titled group, so the outline
+   * stays nested rather than flattening two levels onto `h2`. Each signal
+   * title follows one level below.
+   */
+  headingLevel?: 'h2' | 'h3';
+}
+
+export function CaseFraudDetectionCard({ headingLevel = 'h2' }: CaseFraudDetectionCardProps) {
   const actionable = FRAUD_SIGNALS.filter((signal) => signal.severity !== 'faible');
   const documentsFlagged = new Set(actionable.map((signal) => signal.document)).size;
+  const SignalHeading = headingLevel === 'h3' ? 'h4' : 'h3';
 
   return (
     <Card>
       <CardHeader>
         <SectionHeader
           title="Détection de fraude"
-          as="h2"
+          as={headingLevel}
           action={
             <Badge tone="error">
               <ShieldAlert aria-hidden="true" />
@@ -267,7 +277,9 @@ export function CaseFraudDetectionCard() {
 
                 <div className="min-w-0 flex-1 space-y-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="text-label-md text-on-surface">{signal.title}</h3>
+                    <SignalHeading className="text-label-md text-on-surface">
+                      {signal.title}
+                    </SignalHeading>
                     <Badge tone={SEVERITY_TONE[signal.severity]}>
                       {SEVERITY_LABEL[signal.severity]}
                     </Badge>

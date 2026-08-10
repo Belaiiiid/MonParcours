@@ -241,6 +241,36 @@
     --radius-lg: 1px;
     --radius-xl: 1px;
     --radius-2xl: 1px;
+
+    /*
+     * L'élément discret posé *sur* la surface navy inversée (`AgentBanner`) :
+     * le filet qui sépare la barre d'avancement, et le bloc de chargement qui
+     * tient la place du contenu. Seul endroit du back-office où ces deux-là
+     * doivent se lire sur `--primary` et non sur du blanc — `bg-surface-highest`
+     * y ferait un pavé gris clair, et une bordure sans couleur un trait blanc
+     * franc.
+     *
+     * Un jeton plutôt qu'un modificateur d'opacité : `border-primary-fixed-dim/25`
+     * ne produit aucune règle, les tokens de couleur portant une valeur
+     * complète et non des canaux (voir `--admtl-card-veil` plus haut). Sans
+     * couleur, la bordure retombe sur `currentColor`.
+     *
+     * Valeur : navy éclairci d'environ 18 % de blanc, mesuré à 2,04:1 sur
+     * `--primary`. Au-dessus du seuil de 3:1 des éléments porteurs de sens, ce
+     * filet serait un second niveau de hiérarchie ; il n'en est pas un — les
+     * intitulés de la barre séparent déjà.
+     */
+    --agent-subtle-on-primary: #3d5180;
+  }
+
+  /*
+   * En contraste élevé le filet doit rester un filet : la préférence blanchit
+   * `--background` et fonce `--border-subtle`, mais `--primary` ne bouge pas,
+   * donc la valeur ci-dessus tiendrait telle quelle. On la renforce quand même
+   * d'un cran — c'est le seul repère structurel du bandeau.
+   */
+  .a11y-high-contrast .agent-scope {
+    --agent-subtle-on-primary: #7f92c4;
   }
 
   /*

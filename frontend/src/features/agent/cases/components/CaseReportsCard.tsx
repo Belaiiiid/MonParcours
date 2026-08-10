@@ -22,17 +22,27 @@ import {
  * them, it only lays them out.
  */
 
+/**
+ * Drops to `h3` when the card sits inside a titled group, so the outline stays
+ * nested rather than flattening two levels onto `h2`.
+ */
+type ReportHeadingLevel = 'h2' | 'h3';
+
 export interface CompletenessReportCardProps {
   report?: CompletenessReport;
+  headingLevel?: ReportHeadingLevel;
 }
 
-export function CompletenessReportCard({ report }: CompletenessReportCardProps) {
+export function CompletenessReportCard({
+  report,
+  headingLevel = 'h2',
+}: CompletenessReportCardProps) {
   return (
     <Card>
       <CardHeader>
         <SectionHeader
           title="Contrôle de complétude"
-          as="h2"
+          as={headingLevel}
           action={
             report && (
               <Badge tone={REPORT_OUTCOME_TONE[report.outcome]}>
@@ -104,15 +114,16 @@ export function CompletenessReportCard({ report }: CompletenessReportCardProps) 
 
 export interface CoherenceReportCardProps {
   report?: CoherenceReport;
+  headingLevel?: ReportHeadingLevel;
 }
 
-export function CoherenceReportCard({ report }: CoherenceReportCardProps) {
+export function CoherenceReportCard({ report, headingLevel = 'h2' }: CoherenceReportCardProps) {
   return (
     <Card>
       <CardHeader>
         <SectionHeader
           title="Contrôle de cohérence"
-          as="h2"
+          as={headingLevel}
           action={
             report && (
               <Badge tone={REPORT_OUTCOME_TONE[report.outcome]}>

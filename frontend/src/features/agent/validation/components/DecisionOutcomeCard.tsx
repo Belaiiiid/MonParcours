@@ -48,7 +48,14 @@ export function DecisionOutcomeCard({ decision }: DecisionOutcomeCardProps) {
       <CardContent className="space-y-6">
         <div>
           <h3 className="section-title mb-2">Message transmis à l’allocataire</h3>
-          <blockquote className="flex gap-3 rounded-lg border-l-4 border-l-primary bg-surface-low p-4">
+          {/*
+            Filet fin, pas une barre de 4px : la carte vit maintenant dans le
+            rail de décision, face à l'étage « Ce que la machine a instruit » et
+            à son unique barre bleu IA. La charte ne reconnaît qu'une bordure
+            épaisse (DESIGN.md, « Shapes ») et celle-ci n'était pas elle. L'icône
+            de citation et le fond tonal disent déjà qu'on lit un texte transmis.
+          */}
+          <blockquote className="flex gap-3 rounded-lg border border-border bg-surface-low p-4">
             <Quote className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
             <p className="text-body-md text-on-surface">{decision.explanation}</p>
           </blockquote>

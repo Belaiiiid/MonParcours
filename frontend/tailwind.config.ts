@@ -9,6 +9,63 @@ import animate from 'tailwindcss-animate';
  * accessibility preferences (high contrast, etc.) can override them at runtime
  * without rebuilding the utility classes.
  */
+
+/**
+ * Un jeton de couleur qui accepte le modificateur d'opacité de Tailwind.
+ *
+ * Déclaré `'var(--x)'` en chaîne simple, un jeton **perd silencieusement** le
+ * modificateur : `bg-on-surface/40` ne produit alors aucune règle, et l'élément
+ * s'affiche sans fond du tout. Tailwind ne connaît que la chaîne `var(--x)`, pas
+ * les canaux derrière, donc il ne sait pas y injecter un alpha.
+ *
+ * Le coût de cet oubli était réel et invisible en revue : le voile des boîtes de
+ * dialogue (`bg-on-surface/40`) et les anneaux de focus des champs
+ * (`ring-ai/20`, `ring-primary/20`) ne s'affichaient pas — 24 classes mortes au
+ * total.
+ *
+ * La forme fonction laisse Tailwind demander la couleur avec ou sans alpha :
+ * - sans modificateur, on rend `var(--x)` tel quel — la sortie CSS existante ne
+ *   bouge pas d'un octet, ce qui est la propriété qu'on veut pour un correctif
+ *   posé sur toute la palette ;
+ * - avec modificateur, `color-mix()` applique l'alpha sans avoir à connaître les
+ *   canaux, ce qui marche aussi bien pour un hex (`--primary`) que pour un
+ *   `oklch()` (`--admtl-*`). Mélanger avec `transparent` en alpha prémultiplié
+ *   ne fait que poser l'opacité : la teinte n'est pas assombrie.
+ */
+const colorToken =
+  (variable: string) =>
+  ({ opacityValue }: { opacityValue?: string | number } = {}) => {
+    if (opacityValue === undefined) return `var(${variable})`;
+
+    /*
+     * `opacityValue` arrive sous trois formes selon l'appelant : un nombre
+     * (le plugin de dégradés passe `0` pour sa borne transparente), un nombre
+     * en chaîne (`'0.4'` pour un modificateur `/40`), ou — sans modificateur —
+     * la variable d'opacité de l'utilitaire, `var(--tw-bg-opacity, 1)`.
+     * D'où la normalisation avant tout test : `.includes()` sur le nombre brut
+     * fait échouer le build entier au moment de la compilation du CSS.
+     */
+    const alpha = String(opacityValue);
+
+    /*
+     * Cas sans modificateur : on rend le jeton nu. La sortie CSS de toutes les
+     * classes qui marchaient déjà reste identique, et `color-mix()` n'apparaît
+     * que là où un alpha est réellement demandé — c'est ce qui rend ce
+     * correctif sûr appliqué à la palette entière.
+     */
+    if (alpha.includes('var(--tw-')) return `var(${variable})`;
+
+    return `color-mix(in srgb, var(${variable}) calc(${alpha} * 100%), transparent)`;
+  };
+
+/**
+ * Le cast est délibéré. Tailwind accepte une fonction partout où il accepte une
+ * couleur — c'est la manière documentée de brancher un jeton CSS sur le
+ * modificateur d'opacité — mais ses propres types déclarent les feuilles de la
+ * palette en `string`. Sans ce cast, la forme fonction ne compile pas, alors
+ * qu'elle est exactement ce que le moteur attend à l'exécution.
+ */
+const token = colorToken as unknown as (variable: string) => string;
 const config: Config = {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -17,75 +74,75 @@ const config: Config = {
       colors: {
         // Brand
         primary: {
-          DEFAULT: 'var(--primary)',
-          foreground: 'var(--on-primary)',
-          container: 'var(--primary-container)',
-          fixed: 'var(--primary-fixed)',
-          'fixed-dim': 'var(--primary-fixed-dim)',
-          'on-fixed': 'var(--on-primary-fixed)',
+          DEFAULT: token('--primary'),
+          foreground: token('--on-primary'),
+          container: token('--primary-container'),
+          fixed: token('--primary-fixed'),
+          'fixed-dim': token('--primary-fixed-dim'),
+          'on-fixed': token('--on-primary-fixed'),
         },
         secondary: {
-          DEFAULT: 'var(--secondary)',
-          foreground: 'var(--on-secondary)',
-          fixed: 'var(--secondary-fixed)',
-          'fixed-dim': 'var(--secondary-fixed-dim)',
-          'on-fixed': 'var(--on-secondary-fixed)',
+          DEFAULT: token('--secondary'),
+          foreground: token('--on-secondary'),
+          fixed: token('--secondary-fixed'),
+          'fixed-dim': token('--secondary-fixed-dim'),
+          'on-fixed': token('--on-secondary-fixed'),
         },
         // AI accent — the #003593 / #f0f4ff pairing used by recommendation cards
         ai: {
-          DEFAULT: 'var(--accent-ai)',
-          surface: 'var(--accent-ai-surface)',
+          DEFAULT: token('--accent-ai'),
+          surface: token('--accent-ai-surface'),
         },
 
         // Surfaces (tonal layering)
-        background: 'var(--background)',
+        background: token('--background'),
         surface: {
-          DEFAULT: 'var(--surface)',
-          lowest: 'var(--surface-container-lowest)',
-          low: 'var(--surface-container-low)',
-          container: 'var(--surface-container)',
-          high: 'var(--surface-container-high)',
-          highest: 'var(--surface-container-highest)',
-          inverse: 'var(--inverse-surface)',
+          DEFAULT: token('--surface'),
+          lowest: token('--surface-container-lowest'),
+          low: token('--surface-container-low'),
+          container: token('--surface-container'),
+          high: token('--surface-container-high'),
+          highest: token('--surface-container-highest'),
+          inverse: token('--inverse-surface'),
         },
 
         // Text
         'on-surface': {
-          DEFAULT: 'var(--on-surface)',
-          variant: 'var(--on-surface-variant)',
+          DEFAULT: token('--on-surface'),
+          variant: token('--on-surface-variant'),
         },
         muted: {
-          DEFAULT: 'var(--surface-container-low)',
-          foreground: 'var(--text-muted)',
+          DEFAULT: token('--surface-container-low'),
+          foreground: token('--text-muted'),
         },
 
         // Borders
         border: {
-          DEFAULT: 'var(--border-subtle)',
-          strong: 'var(--outline-variant)',
+          DEFAULT: token('--border-subtle'),
+          strong: token('--outline-variant'),
         },
         outline: {
-          DEFAULT: 'var(--outline)',
-          variant: 'var(--outline-variant)',
+          DEFAULT: token('--outline'),
+          variant: token('--outline-variant'),
         },
-        ring: 'var(--primary)',
+        ring: token('--primary'),
 
         // Status
         success: {
-          DEFAULT: 'var(--success)',
-          surface: 'var(--success-surface)',
-          foreground: 'var(--on-success)',
+          DEFAULT: token('--success'),
+          surface: token('--success-surface'),
+          foreground: token('--on-success'),
         },
         warning: {
-          DEFAULT: 'var(--warning)',
-          surface: 'var(--warning-surface)',
-          foreground: 'var(--on-warning)',
+          DEFAULT: token('--warning'),
+          surface: token('--warning-surface'),
+          foreground: token('--on-warning'),
         },
         destructive: {
-          DEFAULT: 'var(--error)',
-          surface: 'var(--error-surface)',
-          foreground: 'var(--on-error)',
-          strong: 'var(--status-error)',
+          DEFAULT: token('--error'),
+          surface: token('--error-surface'),
+          foreground: token('--on-error'),
+          strong: token('--status-error'),
         },
 
         // République Française identity (tricolore)
@@ -99,32 +156,32 @@ const config: Config = {
         // under `.citizen-scope`, see src/index.css). New tokens, so they are
         // safe to declare globally: nothing outside that scope ever uses them.
         brand: {
-          DEFAULT: 'var(--admtl-brand)',
-          soft: 'var(--admtl-brand-soft)',
+          DEFAULT: token('--admtl-brand'),
+          soft: token('--admtl-brand-soft'),
         },
         // Bleu d'action du portail citoyen (titres de page, boutons d'appel à
         // l'action). Un jeton plutôt qu'un `bg-[#102a74]` répété : la teinte
         // apparaît déjà à la connexion et sur le dépôt de dossier.
         action: {
-          DEFAULT: 'var(--admtl-action)',
+          DEFAULT: token('--admtl-action'),
         },
         marianne: {
-          DEFAULT: 'var(--admtl-marianne)',
-          foreground: 'var(--admtl-marianne-foreground)',
+          DEFAULT: token('--admtl-marianne'),
+          foreground: token('--admtl-marianne-foreground'),
         },
-        ink: 'var(--admtl-ink)',
-        foreground: 'var(--admtl-foreground)',
+        ink: token('--admtl-ink'),
+        foreground: token('--admtl-foreground'),
         card: {
-          DEFAULT: 'var(--admtl-card)',
-          foreground: 'var(--admtl-card-foreground)',
+          DEFAULT: token('--admtl-card'),
+          foreground: token('--admtl-card-foreground'),
           // Translucide — pour une carte posée sur une photo. Voir index.css.
-          veil: 'var(--admtl-card-veil)',
+          veil: token('--admtl-card-veil'),
         },
-        'chart-2': 'var(--admtl-chart-2)',
-        'chart-3': 'var(--admtl-chart-3)',
+        'chart-2': token('--admtl-chart-2'),
+        'chart-3': token('--admtl-chart-3'),
 
         // Third-party brand identity — see `--brand-whatsapp` in index.css.
-        whatsapp: 'var(--brand-whatsapp)',
+        whatsapp: token('--brand-whatsapp'),
       },
 
       fontFamily: {

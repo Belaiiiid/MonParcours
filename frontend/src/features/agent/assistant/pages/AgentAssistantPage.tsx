@@ -91,10 +91,11 @@ export default function AgentAssistantPage() {
                       send. They document the assistant's scope instead of
                       offering an action that cannot run. */}
                   <div className="h-full border border-border bg-surface-lowest p-4">
-                    <suggestion.icon
-                      className="mb-3 size-5 text-primary"
-                      aria-hidden="true"
-                    />
+                    {/* Bleu IA, pas navy : ces trois entrées décrivent ce que
+                        le modèle sait faire. C'est le marqueur que la charte
+                        réserve à la machine, et cette page est entièrement la
+                        sienne — rien ici ne lui dispute le signal. */}
+                    <suggestion.icon className="mb-3 size-5 text-ai" aria-hidden="true" />
                     <p className="text-label-md text-on-surface">{suggestion.label}</p>
                     <p className="mt-1 text-label-sm text-on-surface-variant">
                       {suggestion.detail}

@@ -27,7 +27,12 @@ export function AdminLayout() {
       <header className="sticky top-0 z-40 flex h-16 items-center border-b border-border bg-surface-low px-margin-mobile lg:px-margin-desktop">
         <div className="flex items-center gap-3">
           <Logo />
-          <span className="rounded bg-primary px-2 py-0.5 text-label-sm text-on-primary">
+          {/* `text-primary-foreground`, pas `text-on-primary` : le jeton CSS
+              s'appelle `--on-primary` mais la classe Tailwind qui l'expose est
+              `primary.foreground` (tailwind.config.ts). `text-on-primary` ne
+              produisait aucune règle — la pastille héritait donc de l'encre
+              courante, du texte sombre sur le navy. */}
+          <span className="rounded bg-primary px-2 py-0.5 text-label-sm text-primary-foreground">
             Administration
           </span>
         </div>

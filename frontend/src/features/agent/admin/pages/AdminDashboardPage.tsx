@@ -66,13 +66,25 @@ export default function AdminDashboardPage() {
     }
   };
 
+  /*
+   * Le rôle est affiché dans la langue du produit, pas dans celle de la base :
+   * la pastille imprimait la valeur brute — « ADMIN », « AGENT » — au milieu
+   * d'une interface entièrement en français. Le libellé retombe sur la valeur
+   * technique si un rôle inconnu arrive, plutôt que de rendre une case vide.
+   */
+  const ROLE_LABEL: Record<string, string> = {
+    ADMIN: 'Administrateur',
+    AGENT: 'Agent instructeur',
+    CITIZEN: 'Citoyen',
+  };
+
   const roleBadge = (r: string) => {
     const tones: Record<string, 'info' | 'accent' | 'neutral'> = {
       ADMIN: 'accent',
       AGENT: 'info',
       CITIZEN: 'neutral',
     };
-    return <Badge tone={tones[r] ?? 'neutral'}>{r}</Badge>;
+    return <Badge tone={tones[r] ?? 'neutral'}>{ROLE_LABEL[r] ?? r}</Badge>;
   };
 
   return (
@@ -208,7 +220,10 @@ export default function AdminDashboardPage() {
                 {staff.map((user) => (
                   <li key={user.id} className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-primary-fixed text-label-md text-primary-fixed-foreground">
+                      {/* `text-primary-on-fixed` : `text-primary-fixed-foreground`
+                          n'existe pas dans la palette et ne produisait aucune
+                          règle — l'icône retombait sur l'encre courante. */}
+                      <div className="flex size-10 items-center justify-center rounded-full bg-primary-fixed text-label-md text-primary-on-fixed">
                         <UserCog className="size-5" aria-hidden="true" />
                       </div>
                       <div>
