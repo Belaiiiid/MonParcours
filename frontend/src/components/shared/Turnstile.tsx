@@ -110,6 +110,7 @@ export default function Turnstile({
     [theme, size],
   );
 
+  // Fetch site key on mount.
   useEffect(() => {
     let cancelled = false;
 
@@ -123,13 +124,25 @@ export default function Turnstile({
           '[Turnstile] TURNSTILE_SITE_KEY not set on the backend — captcha widget will not render.',
         );
         onVerifyRef.current('dev-bypass-token');
-        return;
       }
-
-      loadTurnstileScript()
-        .then(() => { if (!cancelled) renderWidget(key); })
-        .catch((err) => console.error('[Turnstile] Script load failed:', err));
     });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Render widget once siteKey is loaded and the container div is mounted in the DOM.
+  useEffect(() => {
+    if (!siteKey) return;
+
+    let cancelled = false;
+
+    loadTurnstileScript()
+      .then(() => {
+        if (!cancelled) renderWidget(siteKey);
+      })
+      .catch((err) => console.error('[Turnstile] Script load failed:', err));
 
     return () => {
       cancelled = true;
@@ -138,7 +151,7 @@ export default function Turnstile({
         widgetIdRef.current = null;
       }
     };
-  }, [renderWidget]);
+  }, [siteKey, renderWidget]);
 
   // Nothing to show while loading or when the key is absent.
   if (!siteKey) return null;
