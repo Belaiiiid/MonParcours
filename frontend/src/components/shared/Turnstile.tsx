@@ -58,8 +58,21 @@ function loadTurnstileScript(): Promise<void> {
 
 let siteKeyCache: string | null | undefined = undefined; // undefined = not yet fetched
 
-async function fetchSiteKey(): Promise<string | null> {
-  if (siteKeyCache !== undefined) return siteKeyCache;
+/**
+ * Résultat de la lecture de configuration.
+ *
+ * `unreachable` est distinct de `key: null` : le second est un choix de
+ * l'environnement (pas de captcha en développement), le premier une panne. Les
+ * confondre — ce que faisait ce module — donnait un formulaire sans widget et
+ * un jeton de contournement qu'un backend correctement configuré rejette,
+ * c'est-à-dire une connexion impossible sans rien à l'écran pour l'expliquer.
+ */
+type SiteKeyResult = { status: 'ok'; key: string } | { status: 'disabled' } | { status: 'unreachable' };
+
+async function fetchSiteKey(): Promise<SiteKeyResult> {
+  if (siteKeyCache !== undefined) {
+    return siteKeyCache === null ? { status: 'disabled' } : { status: 'ok', key: siteKeyCache };
+  }
 
   try {
     const res = await fetch(`${API_BASE_URL}/auth/config`);
@@ -67,11 +80,16 @@ async function fetchSiteKey(): Promise<string | null> {
     const data = (await res.json()) as { turnstileSiteKey?: string | null };
     siteKeyCache = data.turnstileSiteKey ?? null;
   } catch (err) {
-    console.error('[Turnstile] Failed to fetch site key from backend:', err);
-    siteKeyCache = null;
+    // Pas de mise en cache : la prochaine tentative doit repartir du réseau,
+    // sinon une coupure d'une seconde condamne l'onglet jusqu'au rechargement.
+    console.error(
+      `[Turnstile] Configuration illisible sur ${API_BASE_URL}/auth/config — le backend est-il démarré ?`,
+      err,
+    );
+    return { status: 'unreachable' };
   }
 
-  return siteKeyCache;
+  return siteKeyCache === null ? { status: 'disabled' } : { status: 'ok', key: siteKeyCache };
 }
 
 /* ------------------------------------------------------------------ */
@@ -87,6 +105,8 @@ export default function Turnstile({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [siteKey, setSiteKey] = useState<string | null | undefined>(siteKeyCache);
+  /** Panne : configuration injoignable, script bloqué, ou widget refusé par Cloudflare. */
+  const [failure, setFailure] = useState<string | null>(null);
 
   // Stable callback refs so the widget doesn't re-render on every parent render.
   const onVerifyRef = useRef(onVerify);
@@ -99,13 +119,29 @@ export default function Turnstile({
       if (!containerRef.current || !window.turnstile) return;
       if (widgetIdRef.current !== null) return; // already rendered
 
-      widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: key,
-        theme,
-        size,
-        callback: (token: string) => onVerifyRef.current(token),
-        'expired-callback': () => onExpireRef.current?.(),
-      });
+      try {
+        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+          sitekey: key,
+          theme,
+          size,
+          callback: (token: string) => onVerifyRef.current(token),
+          'expired-callback': () => onExpireRef.current?.(),
+          // Sans ce rappel, Cloudflare refusait le widget sans un mot : clé
+          // inconnue du domaine (code 110200, le cas d'un `localhost` absent de
+          // la liste d'hôtes de la console Cloudflare), clé mal formée, ou
+          // requête bloquée. L'écran restait vide et le bouton grisé.
+          'error-callback': (code?: string) => {
+            console.error(
+              `[Turnstile] Cloudflare a refusé le widget (code ${code ?? 'inconnu'}). ` +
+                'Vérifiez que le domaine courant figure dans les hôtes autorisés de la clé.',
+            );
+            setFailure(`Le captcha n’a pas pu se charger (code ${code ?? 'inconnu'}).`);
+          },
+        });
+      } catch (err) {
+        console.error('[Turnstile] window.turnstile.render a échoué :', err);
+        setFailure('Le captcha n’a pas pu s’afficher.');
+      }
     },
     [theme, size],
   );
@@ -114,17 +150,30 @@ export default function Turnstile({
   useEffect(() => {
     let cancelled = false;
 
-    fetchSiteKey().then((key) => {
+    fetchSiteKey().then((result) => {
       if (cancelled) return;
-      setSiteKey(key);
 
-      if (!key) {
-        // No key configured → dev mode: auto-verify so the form is usable.
-        console.warn(
-          '[Turnstile] TURNSTILE_SITE_KEY not set on the backend — captcha widget will not render.',
-        );
-        onVerifyRef.current('dev-bypass-token');
+      if (result.status === 'ok') {
+        setSiteKey(result.key);
+        return;
       }
+
+      if (result.status === 'disabled') {
+        // Aucune clé côté backend : développement assumé, le formulaire doit
+        // rester utilisable. Le backend saute la vérification symétriquement
+        // (`verify_turnstile` sort quand `TURNSTILE_SECRET_KEY` est absent).
+        console.warn(
+          '[Turnstile] TURNSTILE_SITE_KEY absent du backend — captcha désactivé.',
+        );
+        setSiteKey(null);
+        onVerifyRef.current('dev-bypass-token');
+        return;
+      }
+
+      // Injoignable : surtout pas de jeton de contournement, que le backend
+      // rejetterait s'il est, lui, configuré. On le dit à l'écran.
+      setSiteKey(null);
+      setFailure('Le service de vérification est injoignable. Réessayez dans un instant.');
     });
 
     return () => {
@@ -142,7 +191,14 @@ export default function Turnstile({
       .then(() => {
         if (!cancelled) renderWidget(siteKey);
       })
-      .catch((err) => console.error('[Turnstile] Script load failed:', err));
+      .catch((err) => {
+        console.error(
+          '[Turnstile] Le script Cloudflare n’a pas pu être chargé ' +
+            '(challenges.cloudflare.com bloqué par un proxy, un pare-feu ou une extension ?) :',
+          err,
+        );
+        if (!cancelled) setFailure('Le captcha n’a pas pu être chargé.');
+      });
 
     return () => {
       cancelled = true;
@@ -153,7 +209,17 @@ export default function Turnstile({
     };
   }, [siteKey, renderWidget]);
 
-  // Nothing to show while loading or when the key is absent.
+  // Une panne se dit : sans cela, le bouton d'envoi reste grisé face à un
+  // espace vide, et rien à l'écran n'indique quoi faire.
+  if (failure) {
+    return (
+      <p role="alert" className="text-center text-body-sm text-destructive">
+        {failure}
+      </p>
+    );
+  }
+
+  // Rien à montrer pendant le chargement, ni quand le captcha est désactivé.
   if (!siteKey) return null;
 
   return (
