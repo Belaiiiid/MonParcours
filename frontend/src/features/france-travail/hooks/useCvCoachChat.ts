@@ -140,5 +140,12 @@ export function useCvCoachChat(): CvCoachController {
       .finally(() => setIsSending(false));
   }, []);
 
-  return { messages, isSending, error, send, selectOption: send, sendCv };
+  /* Le coach CV n'a pas de fil persiste : ses echanges vivent le temps de la
+     page, il n'y a donc rien a effacer cote serveur. Le vidage local suffit a
+     honorer le contrat de `ChatbotController` sans mentir sur ce qu'il fait. */
+  const deleteHistory = useCallback(async () => {
+    setMessages([]);
+  }, []);
+
+  return { messages, isSending, error, send, selectOption: send, sendCv, deleteHistory };
 }

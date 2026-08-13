@@ -1,10 +1,9 @@
 import { Inbox, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SectionHeader } from '@/components/shared';
 import { AgentPage, AsyncBoundary, CaseQueueTable } from '@/features/agent/components';
 import { useAgentCases } from '@/features/agent/hooks';
 
@@ -31,31 +30,33 @@ export default function CaseListPage() {
   };
 
   return (
-    <AgentPage title="Dossiers" description="File d’instruction complète, tous statuts confondus.">
-      <Card>
-        <CardHeader>
-          <SectionHeader
-            title="Tous les dossiers"
-            as="h2"
-            action={
-              <div className="w-64">
-                <label htmlFor="case-search" className="sr-only">
-                  Rechercher un dossier par référence ou allocataire
-                </label>
-                <Input
-                  id="case-search"
-                  type="search"
-                  placeholder="Référence ou allocataire…"
-                  startIcon={<Search />}
-                  value={search}
-                  onChange={(event) => handleSearch(event.target.value)}
-                />
-              </div>
-            }
+    <AgentPage
+      title="Dossiers"
+      description="File d’instruction complète, tous statuts confondus."
+      /*
+       * La recherche remonte à hauteur du titre. Enfermée dans l'en-tête de la
+       * carte, elle était annoncée par un troisième intitulé — « Tous les
+       * dossiers » — qui ne disait rien de plus que le `h1`. Sur une surface de
+       * volume, le champ qui filtre la page appartient à la tête de page.
+       */
+      actions={
+        <div className="w-full sm:w-72">
+          <label htmlFor="case-search" className="sr-only">
+            Rechercher un dossier par référence ou allocataire
+          </label>
+          <Input
+            id="case-search"
+            type="search"
+            placeholder="Référence ou allocataire…"
+            startIcon={<Search />}
+            value={search}
+            onChange={(event) => handleSearch(event.target.value)}
           />
-        </CardHeader>
-
-        <CardContent className="px-0">
+        </div>
+      }
+    >
+      <Card>
+        <CardContent className="p-0 py-2">
           <AsyncBoundary
             resource={cases}
             fallback={
@@ -67,6 +68,7 @@ export default function CaseListPage() {
             }
             empty={{
               icon: Inbox,
+              tone: 'institutional',
               title: search ? 'Aucun résultat' : 'Aucun dossier',
               description: search
                 ? `Aucun dossier ne correspond à « ${search} ».`

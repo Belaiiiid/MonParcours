@@ -16,9 +16,10 @@ visiteur non connecté, qui n'a explicitement rien de stocké.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
@@ -91,3 +92,30 @@ def get_history(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[ChatHistoryMessageSchema]:
     return history.get_history(db, current_user.id)
+
+
+@router.delete(
+    "/history",
+    status_code=status.HTTP_204_NO_CONTENT,
+    # Explicite : sans lui, FastAPI deduit un modele de reponse de l'annotation
+    # `-> None` et refuse de le marier a un 204, qui interdit tout corps.
+    response_model=None,
+    summary="Effacer l'historique de l'assistant (citoyen authentifié)",
+    description=(
+        "Supprime le fil persisté du citoyen appelant. Sans paramètre, tout le "
+        "fil ; avec `day` (format `AAAA-MM-JJ`), la seule journée demandée — "
+        "l'unité que le client donne à relire dans son historique. "
+        "La suppression est définitive et bornée au citoyen authentifié : le "
+        "`user_id` vient du jeton, jamais de la requête, donc personne ne peut "
+        "effacer le fil d'un autre."
+    ),
+)
+def delete_history(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    day: Annotated[
+        date | None,
+        Query(description="Journée à effacer (AAAA-MM-JJ). Omis : tout le fil."),
+    ] = None,
+) -> None:
+    history.delete_history(db, current_user.id, day)

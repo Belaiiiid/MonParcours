@@ -1,135 +1,78 @@
-import { BookOpen, FileSearch, Scale, SendHorizonal } from 'lucide-react';
+import { BookOpen, FileSearch, MessageSquare, Scale, ShieldCheck } from 'lucide-react';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { AgentPage } from '@/features/agent/components';
+import { ChatWindow } from '@/features/chatbot/components/ChatWindow';
+import { useChatbot } from '@/features/chatbot/hooks/useChatbot';
 
 /**
- * Conversation starters offered on the welcome panel.
+ * Amorces proposées sur un fil vide.
  *
- * Phrased as the two jobs this assistant exists for — regulatory lookup and
- * case summarisation — rather than as generic chat prompts: an instructing
- * agent arrives with a file open, not with a blank question.
+ * Formulées comme les deux tâches pour lesquelles cet assistant existe —
+ * recherche réglementaire et synthèse de dossier — plutôt qu'en questions
+ * génériques : un agent arrive avec un dossier ouvert, pas avec une page
+ * blanche.
  */
-const SUGGESTIONS = [
-  {
-    icon: Scale,
-    label: 'Rechercher un texte réglementaire',
-    detail: 'Article, barème ou condition d’éligibilité applicable à un dossier.',
-  },
-  {
-    icon: FileSearch,
-    label: 'Synthétiser un dossier',
-    detail: 'Résumé des pièces, incohérences relevées et points d’attention.',
-  },
-  {
-    icon: BookOpen,
-    label: 'Expliquer une décision',
-    detail: 'Formuler la motivation d’un refus ou d’une validation.',
-  },
+const STARTER_QUESTIONS = [
+  'Rechercher un texte réglementaire',
+  'Synthétiser un dossier en cours d’instruction',
+  'Expliquer la motivation d’une décision',
 ];
 
+/** Leurs pictogrammes, dans le même ordre — voir `ChatWindowProps.starterIcons`. */
+const STARTER_ICONS = [Scale, FileSearch, BookOpen];
+
 /**
- * Agent-facing assistant — regulatory lookup and case summarisation.
+ * Assistant du poste d'instruction.
  *
- * Distinct from the citizen `features/chatbot`: different corpus, different
- * tone, different permissions. Sharing the chat transport later is a service
- * concern; the two UIs stay separate.
+ * Même fenêtre que l'assistant citoyen — `ChatWindow` et `useChatbot`, sans
+ * copie ni variante : une seule surface de conversation dans le produit, donc
+ * un seul endroit où corriger un défaut de rendu, de clavier ou de lecture
+ * d'écran.
  *
- * The composer is rendered but inert: no agent conversational service is
- * bound yet (`features/agent/services` has no chat client). It is shown
- * disabled, with the reason stated, rather than hidden — the agent sees the
- * shape of the tool and why it cannot be used, and wiring a service later is
- * a change of handler, not a change of layout.
+ * La page était jusqu'ici une maquette : un panneau d'accueil décoratif et un
+ * composeur désactivé, faute de service conversationnel agent. Elle est
+ * désormais branchée sur le même transport que le citoyen. Le corpus, le ton
+ * et les droits restent une affaire de service : le jour où un client agent
+ * dédié arrive, il se substitue à `useChatbot` ici et rien d'autre ne bouge.
  */
 export default function AgentAssistantPage() {
+  const controller = useChatbot();
+
   return (
     <AgentPage
       title="Assistant IA"
       description="Recherche réglementaire et synthèse de dossiers."
+      // Plein écran, comme « Aide IA » côté citoyen : la page prend la hauteur
+      // que lui laisse la coque et ne défile pas, seul le fil des messages le
+      // fait.
+      fill
     >
-      <Card className="overflow-hidden">
-        {/* Chat header: the assistant's identity, carried by the Mistral "M"
-            mark the platform uses for all its AI surfaces
-            (see components/layout/PartnerLogos). */}
-        <div className="flex items-center gap-3 border-b border-border bg-surface-lowest px-6 py-4">
-          <img
-            src="/mistral-logo.svg"
-            alt=""
-            aria-hidden="true"
-            className="size-9 shrink-0 object-contain"
+      {/* Même fenêtre que les autres assistants (`spotlight`), mais sur les
+          surfaces du poste d'instruction : `.agent-assistant` redéclare les
+          jetons `--chat-*` — cartes blanches, filets bleu pâle, envoi d'un
+          seul bleu — sans qu'aucun composant soit dupliqué.
+
+          `max-w-3xl` et non `4xl` : trois amorces et une barre de saisie sur
+          896px s'étalaient en largeur d'affiche. La colonne se resserre, le
+          panneau cesse d'être un décor et redevient un plan de travail. */}
+      <div className="agent-assistant agent-assistant-backdrop -mx-margin-mobile flex min-h-0 flex-1 flex-col px-margin-mobile md:-mx-gutter md:px-gutter">
+        <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
+          <ChatWindow
+            controller={controller}
+            fill
+            variant="spotlight"
+            starterQuestions={STARTER_QUESTIONS}
+            starterIcons={STARTER_ICONS}
+            starterTitle="Comment puis-je vous aider ?"
+            starterLead="Je peux rechercher une réglementation, synthétiser un dossier ou expliquer une décision."
+            starterLayout="row"
+            starterMascotSrc="/chat_bleu.gif"
+            composerIcon={MessageSquare}
+            disclaimerIcon={ShieldCheck}
+            composerPlaceholder="Poser une question réglementaire ou demander une synthèse…"
           />
-          <div className="min-w-0">
-            <p className="text-label-md text-on-surface">Assistant d’instruction</p>
-            <p className="text-label-sm text-on-surface-variant">
-              Propulsé par Mistral AI — corpus réglementaire CAF
-            </p>
-          </div>
         </div>
-
-        <CardContent className="px-0">
-          {/* Welcome panel — stands in for the transcript until a service is
-              bound, and remains the empty state once one is. */}
-          <div className="flex flex-col items-center px-6 py-10 text-center">
-            <img
-              src="/mistral-logo.svg"
-              alt="Assistant Mistral AI"
-              className="mb-5 size-24 object-contain"
-            />
-            <h2 className="text-headline-md text-on-surface">Comment puis-je vous assister ?</h2>
-            <p className="mt-2 max-w-prose text-body-sm text-on-surface-variant">
-              Posez une question réglementaire ou demandez la synthèse d’un dossier en cours
-              d’instruction. Les réponses citent les articles sur lesquels elles s’appuient.
-            </p>
-
-            <ul className="mt-8 grid w-full max-w-3xl gap-3 text-left sm:grid-cols-3">
-              {SUGGESTIONS.map((suggestion) => (
-                <li key={suggestion.label}>
-                  {/* Not buttons: with no service bound there is nothing to
-                      send. They document the assistant's scope instead of
-                      offering an action that cannot run. */}
-                  <div className="h-full border border-border bg-surface-lowest p-4">
-                    <suggestion.icon
-                      className="mb-3 size-5 text-primary"
-                      aria-hidden="true"
-                    />
-                    <p className="text-label-md text-on-surface">{suggestion.label}</p>
-                    <p className="mt-1 text-label-sm text-on-surface-variant">
-                      {suggestion.detail}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="border-t border-border px-6 py-4">
-            <Alert tone="info" className="mb-4">
-              <AlertTitle>Assistant non connecté</AlertTitle>
-              <AlertDescription>
-                Aucun service conversationnel agent n’est encore branché. La saisie est
-                désactivée tant que ce service n’est pas disponible.
-              </AlertDescription>
-            </Alert>
-
-            <div className="flex items-end gap-3">
-              <Textarea
-                rows={2}
-                disabled
-                aria-label="Votre question à l’assistant"
-                placeholder="Poser une question réglementaire ou demander une synthèse…"
-                className="flex-1 resize-none"
-              />
-              <Button disabled aria-label="Envoyer la question">
-                <SendHorizonal aria-hidden="true" />
-                <span className="sr-only sm:not-sr-only">Envoyer</span>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      </div>
     </AgentPage>
   );
 }

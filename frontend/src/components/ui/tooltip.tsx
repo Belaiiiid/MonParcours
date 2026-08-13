@@ -24,7 +24,12 @@ const TooltipContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 max-w-xs rounded-lg border border-border bg-surface-highest px-3 py-2 text-body-sm text-on-surface shadow-md',
+        // `shadow-soft`, pas `shadow-md` : la charte ne connaît que deux ombres
+        // et `shadow-md` est celle de la palette Tailwind par défaut, restée
+        // accessible parce que la config étend le thème au lieu de le remplacer.
+        // C'était donc une troisième élévation — « La Règle de l'Ombre Unique »
+        // (DESIGN.md) la nomme comme une régression.
+        'z-50 max-w-xs rounded-lg border border-border bg-surface-highest px-3 py-2 text-body-sm text-on-surface shadow-soft',
         'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0',
         className,
       )}

@@ -75,8 +75,11 @@ export function CitizenFooter({ className }: { className?: string }) {
           backgroundSize: '100% auto',
         }}
       >
-        {/* Filet tricolore : la seule ligne de couleur du panneau. */}
-        <div className="flex h-1 w-full" aria-hidden="true">
+        {/* Filet tricolore : la seule ligne de couleur du panneau. Aminci et
+            adouci — en aplat pleine intensité il se lisait comme une barre de
+            séparation à part entière, en concurrence avec le panneau juste en
+            dessous, au lieu de rappeler discrètement le drapeau. */}
+        <div className="flex h-[3px] w-full opacity-50" aria-hidden="true">
           <span className="h-full flex-1 bg-[#0055A4]" />
           <span className="h-full flex-1 bg-white" />
           <span className="h-full flex-1 bg-[#EF4135]" />
@@ -154,7 +157,7 @@ export function CitizenFooter({ className }: { className?: string }) {
               <img
                 src="https://digital-strategy.ec.europa.eu/sites/default/files/2026-06/AI%20LABELS_3x2_AI%20GENERATED_black.png?destination=/media/10207/edit"
                 alt="Contenu généré par l'IA — icône officielle de l'UE"
-                className="ml-1 h-7 w-auto rounded-md bg-white px-1.5 py-0.5"
+                className="ml-1 h-12 w-auto rounded-md  px-1.5 py-0.5"
                 loading="lazy"
               />
             </p>

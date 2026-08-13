@@ -48,12 +48,23 @@ export function DecisionPanel({ controller }: DecisionPanelProps) {
           </Alert>
         )}
 
-        <div className="flex flex-wrap gap-4">
-          <Button onClick={approve} disabled={isSubmitting}>
+        {/*
+          Les deux issues à largeur égale : le panneau vit désormais dans le
+          rail de décision, et une « Accepter » plus large que « Rejeter » y
+          suggérerait un chemin par défaut là où le produit affirme l'inverse —
+          c'est l'agent qui tranche, pas la mise en page.
+        */}
+        <div className="flex flex-wrap gap-3">
+          <Button className="flex-1" onClick={approve} disabled={isSubmitting}>
             <Check aria-hidden="true" />
             Accepter
           </Button>
-          <Button variant="destructive" onClick={reject} disabled={isSubmitting}>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            onClick={reject}
+            disabled={isSubmitting}
+          >
             <X aria-hidden="true" />
             Rejeter
           </Button>

@@ -1,19 +1,18 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
-import { SectionHeader } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDate } from '@/lib/utils';
-import { AgentPage, AsyncBoundary, CaseScore, CaseStatusBadge } from '@/features/agent/components';
+import { AgentPage, AsyncBoundary } from '@/features/agent/components';
 import {
   CaseAssessmentCard,
   CaseAuditCard,
+  CaseDecisionBanner,
   CaseDocumentsCard,
   CaseFraudCard,
   CaseFraudDetectionCard,
   CaseProfileCard,
+  CaseSection,
   CoherenceReportCard,
   CompletenessReportCard,
 } from '@/features/agent/cases/components';
@@ -28,6 +27,13 @@ import { AGENT_ROUTES } from '@/features/agent/paths';
  * report verdicts and the status are all rendered as received. No document is
  * analysed, no right is evaluated and no score is recomputed here; all of that
  * happened in the pipeline before the case existed as a stored record.
+ *
+ * L'écran est ordonné en trois étages, et l'ordre est le raisonnement de
+ * l'agent : le bandeau dit *quel dossier et où en est l'instruction*, l'étage
+ * bleu dit *ce que la machine a produit*, l'étage neutre dit *ce que
+ * l'allocataire a déposé et ce que le système a tracé*. Empilés à plat, ces
+ * panneaux avaient tous le même poids et un rapport d'analyse se lisait comme
+ * une adresse postale.
  */
 export default function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();
@@ -36,7 +42,9 @@ export default function CaseDetailPage() {
   return (
     <AgentPage
       title="Dossier"
-      description={resource.data ? `Référence ${resource.data.applicationNumber}` : undefined}
+      // La référence n'est plus répétée ici : le bandeau la porte, à la taille
+      // qu'elle mérite. Deux fois le même numéro en tête d'écran ne hiérarchise
+      // rien.
       documentTitle="Dossier — Espace agent"
       actions={
         <Button variant="outline" asChild>
@@ -60,58 +68,59 @@ export default function CaseDetailPage() {
         }
       >
         {(caseRecord) => (
-          <div className="space-y-gutter">
-            <Card>
-              <CardHeader>
-                <SectionHeader title="Synthèse" as="h2" />
-              </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-gutter">
-                <div className="space-y-1">
-                  <p className="text-headline-md text-on-surface">
-                    {caseRecord.applicationNumber}
-                  </p>
-                  <p className="text-body-sm text-on-surface-variant">
-                    {caseRecord.service.label} · déposé le {formatDate(caseRecord.submittedAt)}
-                  </p>
-                  <CaseStatusBadge status={caseRecord.status} />
-                </div>
+          <div className="space-y-8">
+            <CaseDecisionBanner caseRecord={caseRecord} />
 
-                <div className="text-right">
-                  <p className="mb-1 text-label-sm uppercase tracking-wider text-on-surface-variant">
-                    Score d’éligibilité
-                  </p>
-                  <CaseScore score={caseRecord.score} variant="detail" />
-                  {caseRecord.score && (
-                    <p className="mt-1 text-body-sm text-on-surface-variant">
-                      Calculé le {formatDate(caseRecord.score.computedAt)} · modèle{' '}
-                      {caseRecord.score.model}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            {/*
+              L'étage de la machine, marqué une fois pour toutes par le filet
+              bleu IA. Le regroupement fait le travail que six cartes blanches
+              ne faisaient pas : il dit d'où vient ce qu'on lit, et que rien
+              là-dedans ne décide.
+            */}
+            <CaseSection
+              id="case-machine"
+              tone="machine"
+              title="Ce que la machine a instruit"
+              description="Analyses produites par le pipeline avant votre lecture — complétude, cohérence, authenticité des pièces. Elles préparent la décision, elles ne la prennent pas."
+            >
+              {/* The unified assessment, read first: it synthesises the four
+                  analyses below into one decision-support score. */}
+              <CaseAssessmentCard caseId={caseRecord.id} headingLevel="h3" />
 
-            {/* The unified assessment, read first: it synthesises the four
-                analyses below into one decision-support score. */}
-            <CaseAssessmentCard caseId={caseRecord.id} />
+              <div className="grid gap-gutter lg:grid-cols-2">
+                <CompletenessReportCard
+                  report={caseRecord.completenessReport}
+                  headingLevel="h3"
+                />
+                <CoherenceReportCard report={caseRecord.coherenceReport} headingLevel="h3" />
+              </div>
 
-            <CaseProfileCard citizen={caseRecord.citizen} profile={caseRecord.profile} />
+              <CaseFraudCard documents={caseRecord.documents} headingLevel="h3" />
 
-            <div className="grid gap-gutter lg:grid-cols-2">
-              <CompletenessReportCard report={caseRecord.completenessReport} />
-              <CoherenceReportCard report={caseRecord.coherenceReport} />
-            </div>
+              {/* Section statique — ne consomme pas `caseRecord`, voir le
+                  composant. À retirer ou brancher quand l'agent C4 est appelé
+                  depuis cet écran. */}
+              <CaseFraudDetectionCard headingLevel="h3" />
+            </CaseSection>
 
-            <CaseDocumentsCard documents={caseRecord.documents} caseId={caseRecord.id} />
+            <CaseSection id="case-evidence" title="Le dossier et sa trace">
+              <CaseProfileCard
+                citizen={caseRecord.citizen}
+                profile={caseRecord.profile}
+                headingLevel="h3"
+              />
 
-            <CaseFraudCard documents={caseRecord.documents} />
+              <CaseDocumentsCard
+                documents={caseRecord.documents}
+                caseId={caseRecord.id}
+                headingLevel="h3"
+              />
 
-            {/* Section statique — ne consomme pas `caseRecord`, voir le
-                composant. À retirer ou brancher quand l'agent C4 est appelé
-                depuis cet écran. */}
-            <CaseFraudDetectionCard />
-
-            <CaseAuditCard applicationNumber={caseRecord.applicationNumber} />
+              <CaseAuditCard
+                applicationNumber={caseRecord.applicationNumber}
+                headingLevel="h3"
+              />
+            </CaseSection>
           </div>
         )}
       </AsyncBoundary>

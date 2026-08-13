@@ -1,199 +1,194 @@
-# AdMinistral
+# Administral
 
-Portail citoyen GovTech français. **Un compte, un profil citoyen, plusieurs services publics.**
+Administral est un portail citoyen unifié pour accéder à plusieurs services publics avec un seul compte. Il propose deux espaces cohérents mais distincts:
+- Espace citoyen (Administral): dépôt de pièces, suivi de dossier, assistant conversationnel (RAG APL) et panneau vocal.
+- Espace agent (back‑office): validation des dossiers, contestations, contrôle documentaire (vision, optionnel).
 
-Ce dépôt contient le frontend (React) **et** le backend (FastAPI/Python) : authentification,
-assistant IA citoyen (RAG + Mistral), instruction de dossiers, contestations, audit, notifications…
-Les deux projets sont indépendants, chacun avec ses propres dépendances et sa propre commande de
-démarrage — il n'y a pas de `npm run` côté backend.
+Objectifs principaux:
+- Réduire les frictions d’accès aux droits (APL en priorité) avec une expérience moderne et accessible.
+- Offrir aux agents des outils de revue homogènes et traçables.
+- Expérimenter des assistants IA transparents (sources citées) et sûrs.
 
-## Démarrage
+## Architecture applicative (vue d’ensemble)
 
-Le dépôt est séparé en deux projets indépendants, `frontend/` et `backend/`.
-Chacun possède ses propres dépendances ; la racine ne contient aucun outillage
-de build.
+Frontend (frontend/)
+- React + Vite + TypeScript + Tailwind + shadcn/ui; structure par features/.
+- Design tokens et thèmes dans src/index.css, variantes citizen/agent.
+- Chatbot: FloatingChatbot, ChatWindow, MessageBubble, SourceCitation.
+- Voix: VoiceAssistantProvider, VoiceAssistantPanel, VoiceStatusStrip, VoicePageContext, voiceUiStore; lancement depuis FloatingActionBubbles (bulle « Assistant vocal »).
 
-### Frontend
+Backend (backend/)
+- FastAPI: couches router → service → repository, schemas Pydantic v2, SQLAlchemy 2.
+- Endpoints APL/RAG, documents, contestations; configuration via backend/.env (DB, Mistral, Voix, CORS, etc.).
 
-```bash
-cd frontend
-npm install
-npm run dev      # http://localhost:5173
+Vision (backend/vision_service/)
+- Service FastAPI indépendant (port 8011), requirements dédiés (CUDA/CPU selon l’hôte).
+
+Données et index
+- PostgreSQL comme source de vérité transactionnelle.
+- Recherche: BM25 et/ou vecteurs (Qdrant) si activée; préchauffage possible.
+
+Observabilité et qualité
+- Lint/Typecheck front, tests backend (pytest). Hooks de design disponibles.
+
+
+## Monorepo
+
 ```
+frontend/         # App React (Vite, TS, Tailwind)
+backend/          # API FastAPI (routes / services / repository)
+vision_service/   # Service optionnel de vision (port 8011 par défaut)
+docs/             # Notes d’architecture et de design
+```
+- Frontend: React + Vite + Tailwind + shadcn/ui
+- Backend: FastAPI + SQLAlchemy 2 + Alembic + PostgreSQL
+- Vision (optionnel): microservice de détection de fraude/document
 
-| Script (depuis `frontend/`) | Effet |
-|---|---|
-| `npm run dev` | Serveur de développement |
-| `npm run build` | Build de production (typecheck inclus) |
-| `npm run preview` | Prévisualisation du build |
-| `npm run typecheck` | Vérification TypeScript seule |
 
-### Backend
+## Assistants IA et agents
 
-Le backend est en **Python** (FastAPI) — pas de Node/npm ici. Détails complets (base de données,
-migrations, seed, variables d'environnement) dans [`backend/README.md`](backend/README.md).
+- Assistant conversationnel (RAG APL)
+  - Sources officielles (service‑public.fr, caf.fr), citations intégrées.
+  - Recherche hybride (BM25 + vecteurs) si activée; LLM Mistral pour la génération.
+  - Surfaces: widget flottant (FloatingChatbot), page dédiée /chat, centre de documentation.
 
+- Assistant vocal
+  - Panneau flottant « Assistant vocal » (visiteurs et connectés), push‑to‑talk, arrêt de la synthèse.
+  - Affiche le statut et le texte transcrit en direct.
+  - Basé sur VoiceAssistantProvider (STT/TTS configurés via VOICE_* dans backend/.env).
+
+- Assistant de profilage APL
+  - Overlay plein écran guidé par règles déterministes; fallback LLM si nécessaire.
+  - Écrit les réponses dans le profil citoyen.
+
+- Vision (optionnel)
+  - Microservice de détection de falsification/document (TruFor), exposé sur 8011.
+
+## Prérequis
+
+- Node.js ≥ 18
+- Python ≥ 3.11
+- PostgreSQL ≥ 14
+- (Recommandé) ffmpeg pour la passerelle voix
+- (Optionnel) CUDA/cuDNN si vous utilisez la vision accélérée
+
+## Démarrage rapide (dev)
+
+Deux terminaux.
+
+Backend:
 ```bash
 cd backend
 python -m venv .venv
-.venv/Scripts/activate         # Windows — macOS/Linux : source .venv/bin/activate
+.venv/Scripts/activate           # Windows
+# source .venv/bin/activate      # macOS/Linux
 pip install -r requirements.txt
-cp .env.example .env           # puis renseigner DATABASE_PASSWORD
+
+cp .env.example .env             # renseigner DATABASE_PASSWORD, MISTRAL_API_KEY si dispo
+psql -U postgres -c "CREATE DATABASE administral;"
 alembic upgrade head
-uvicorn app.main:app --reload  # http://localhost:8000
+
+uvicorn app.main:app --reload
+# API:    http://localhost:8000/api
+# Docs:   http://localhost:8000/docs
+# Health: http://localhost:8000/api/health
 ```
 
-| | |
-|---|---|
-| API | http://localhost:8000/api |
-| Swagger | http://localhost:8000/docs |
-| Santé | http://localhost:8000/api/health |
-
-### Voix (assistant vocal)
-
-Aperçu
-- STT : Whisper (VOICE_VENDOR=whisper) — ffmpeg non requis
-- TTS : Mistral (VOICE_API_KEY requis)
-- Onboarding après connexion : `/accessibilite-vocale`
-- PTT : un seul blob final envoyé au backend
-- Proxy Vite → backend : `http://127.0.0.1:8000`
-
-#### Prérequis
-- Backend : Python 3.11+, virtualenv. ffmpeg optionnel (requis si VOICE_VENDOR=mistral ou normalisation serveur). PostgreSQL optionnel pour l’historique chatbot.
-- Frontend : Node 18+ (ou 20+). Autoriser l’accès micro dans le navigateur.
-
-#### Backend — Installation
-```bash
-cd backend
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-# source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-#### Backend — Configuration (.env)
-Créez `backend/.env` :
-
-```dotenv
-# STT (Whisper)
-VOICE_VENDOR=whisper
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-VOICE_STT_MODEL=whisper-1
-
-# TTS (Mistral)
-VOICE_API_KEY=mlt-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-VOICE_BASE_URL=https://api.mistral.ai/v1
-# Optionnels
-# VOICE_TTS_MODEL=tts-mini
-# VOICE_TTS_VOICE=male_fr
-
-# Base de données (pour l’historique chatbot)
-# DATABASE_URL=postgresql+psycopg2://USER:PASS@HOST:5432/DBNAME
-```
-
-Notes :
-- VOICE_NLC_* non requis (classifieur serveur optionnel, désactivé par défaut).
-- Avec Whisper, le backend envoie directement le WebM/Opus à l’API — ffmpeg n’est pas nécessaire.
-
-#### Backend — Lancer
-```bash
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-#### Base de données (optionnelle) — Alembic
-Uniquement si vous activez l’historique chatbot.
-```bash
-alembic -c backend/alembic.ini upgrade head
-```
-Dépannage : erreur 500 « relation "chatbot_messages" does not exist » → appliquez la migration et vérifiez `DATABASE_URL`.
-
-#### Frontend — Installation & lancement
+Frontend:
 ```bash
 cd frontend
 npm install
-npm run dev   # http://localhost:5173
+npm run dev
+# http://localhost:5173 (Vite)
 ```
 
-#### Utiliser l’assistant vocal
-1) Connectez‑vous → redirection vers `/accessibilite-vocale`.
-2) Répondez « oui » pour activer l’assistant.
-3) Ouvrez le panneau vocal (citoyen) et maintenez le bouton PTT 2–3 s en parlant.
+Le proxy de dev Vite redirige automatiquement `/api/*` vers `http://localhost:8000` (voir `frontend/vite.config.ts`).
 
-#### Dépannage rapide
-- 400 `audio_too_short` : enregistrement trop court (<0,1 s). Maintenez PTT ~2–3 s et parlez clairement.
-- 200 OK sans texte : clip quasi silencieux ; recommencez plus près du micro.
-- Aucun appel réseau sur PTT : permissions micro, aucun autre onglet/app n’utilise le micro.
-- CORS/Proxy : backend sur `http://127.0.0.1:8000` (évitez `localhost`).
+### Service vision (optionnel)
 
-## Stack
-
-**Frontend** — React 18 · TypeScript · Vite 6 · Tailwind CSS 3 · Radix UI (primitives de style
-shadcn/ui) · React Router 6 · Zustand · lucide-react
-
-**Backend** — Python · FastAPI · SQLAlchemy 2 · Alembic · PostgreSQL · Pydantic v2 · LangGraph ·
-Mistral (LLM) · sentence-transformers / Qdrant / BM25 (RAG hybride)
-
-## Structure
-
-```
-MonParcours/
-├── frontend/          Application React (voir ci-dessous)
-├── backend/           API FastAPI/Python (voir backend/README.md)
-├── docs/              Documentation d'architecture
-└── README.md
+```bash
+cd backend/vision_service
+# Installez selon requirements-cuda.txt si GPU, sinon fallback CPU si prévu
+python -m venv .venv && .venv/Scripts/activate
+pip install -r requirements-cuda.txt
+python app.py  # écoute sur 8011 (voir BACKEND .env FRAUD_VISION_ENDPOINT)
 ```
 
-L'organisation interne du frontend est inchangée :
+## Configuration
 
+Copiez `backend/.env.example` vers `.env`. Variables importantes:
+
+- Base de données: `DATABASE_HOST/PORT/NAME/USER/PASSWORD`
+- CORS: `CORS_ORIGINS` (par défaut `http://localhost:5173`)
+- Assistant IA (RAG APL):
+  - `MISTRAL_API_KEY` (clé réelle non commitée)
+  - `CHATBOT_BUDGET_JETONS_PAR_JOUR` — plafond global (par défaut OFF, mettez une valeur en prod)
+  - `TRUST_PROXY_HEADERS` — 0 sans proxy, 1 derrière proxy (très important)
+  - `CHATBOT_WARMUP` — 1 pour précharger les index (recommandé)
+- Voix (passerelle):
+  - `VOICE_API_KEY`, `VOICE_BASE_URL`, `VOICE_STT_MODEL`, `VOICE_TTS_MODEL`, `VOICE_TTS_VOICE`
+- Frontend:
+  - Dev: proxy Vite → aucune config
+  - Prod: définissez `VITE_API_BASE_URL` si l’API est sur un autre domaine
+
+## Architecture
+
+Backend (FastAPI) suit une séparation stricte:
+- router.py — E/S HTTP, pas de règles métier
+- service.py — logique métier, orchestration
+- repository.py — SQL uniquement
+- models.py — entités SQLAlchemy; schemas.py — Pydantic v2
+
+Les routeurs sont montés dans `app.main` (voir `backend/app/main.py`).
+
+Frontend:
+- Structure par “features/” avec composants UI (shadcn/ui) et Tailwind.
+- Vite + TS + alias `@` → `src/`.
+
+Contrat API:
+- Réponses en camelCase, types alignés côté frontend (cf. backend/README.md).
+
+## Données de démonstration
+
+Un script `scripts/seed.py` (voir backend/README.md) charge des données synthétiques qui reproduisent fidèlement les fixtures frontend.
+
+## Tests
+
+Backend:
+```bash
+cd backend
+pytest
 ```
-frontend/src/
-├── app/               Composition de l'application
-│   ├── config/        Identité, registre des services, navigation
-│   ├── providers/     Racine de composition des providers
-│   └── router/        Routes, chemins, garde d'accès
-├── components/
-│   ├── ui/            Primitives du design system
-│   ├── layout/        Coquilles applicatives
-│   └── shared/        Composants transverses issus des maquettes
-├── features/          Modules isolés (portal, apl, profile, documents, chatbot, agent, auth)
-├── hooks/             Hooks réutilisables
-├── services/          Contrats d'API (interfaces uniquement)
-├── store/             État global Zustand (UI + session)
-├── types/             Types partagés
-└── index.css          Tokens de design en variables CSS
+
+Frontend:
+```bash
+cd frontend
+npm run typecheck
+npm run lint
 ```
 
-**Règle d'isolation** : un module `features/*` n'importe jamais depuis un autre module `features/*`.
+## Production
 
-## Documentation
+Backend:
+- Uvicorn unique worker tant que le magasin vectoriel est embarqué (Qdrant lock).
+- Configurez le budget de jetons et `TRUST_PROXY_HEADERS` selon la topologie.
+- Exposez `/api/*`.
 
-- [`docs/design-analysis.md`](docs/design-analysis.md) — analyse des 13 maquettes, design system
-  extrait, décisions et arbitrages.
-- [`docs/roadmap.md`](docs/roadmap.md) — état actuel, points d'attention et ordre de construction.
+Frontend:
+```bash
+cd frontend
+npm run build
+npm run preview    # ou servez dist/ derrière un CDN
+```
+Définissez `VITE_API_BASE_URL` si l’API est sur un domaine différent.
 
-## Ajouter un service public
+## Sécurité
 
-1. Ajouter l'entrée dans `frontend/src/app/config/services.ts`.
-2. Créer `frontend/src/features/<service>/pages/`.
-3. Déclarer les routes dans `frontend/src/app/router/index.tsx`.
+- Les endpoints `/api/agent/*` sont actuellement non authentifiés (développement). Ajoutez le garde d’auth dans `backend/app/core/security.py` avant tout déploiement partagé.
 
-La coquille (header, sidebar, footer, garde d'accès) n'a pas à être modifiée.
 
-## États vides
+## Dépannage
 
-Aucune donnée n'est simulée. Les pages ne contiennent que la mise en page : chaque collection est
-déclarée vide et rend son état vide (`<EmptyState />`), et chaque valeur inconnue rend un tiret
-neutre annoncé « Non renseigné » (`<DataRow label="…" />` sans `value`).
-
-Pour brancher un service, remplacez la constante vide en tête de page — le rendu de l'état plein est
-déjà écrit à côté de l'état vide.
-
-## Accessibilité
-
-Cible **RGAA**. Le socle fournit : lien d'évitement, focus visible non supprimable, structure
-sémantique (`header`/`nav`/`main`/`footer`, un seul `h1` par page), `aria-hidden` sur les icônes
-décoratives, `aria-current` sur la navigation, cibles tactiles de 44px minimum, et sept préférences
-d'accessibilité fonctionnelles (contraste élevé, texte agrandi, focus renforcé, animations réduites)
-persistées et appliquées via `<html class="a11y-*">`.
+- `psql: command not found` (Windows): appelez `psql.exe` par son chemin complet ou ajoutez-le au PATH.
+- L’assistant reste en BM25 seul: vérifiez les logs de warmup et la présence de `MISTRAL_API_KEY`.
+- CORS: utilisez le proxy Vite en dev; en prod, ajustez `CORS_ORIGINS` et `VITE_API_BASE_URL`.

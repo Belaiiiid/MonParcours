@@ -55,12 +55,12 @@ export function CaseQueueTable({
       <caption className="sr-only">{caption}</caption>
       <TableHeader>
         <TableRow>
-          <TableHead>Référence</TableHead>
-          <TableHead>Allocataire</TableHead>
-          <TableHead>Déposé le</TableHead>
-          {showWaitingDays && <TableHead>Attente</TableHead>}
-          <TableHead>Score</TableHead>
-          <TableHead>Statut</TableHead>
+          <TableHead className="text-[color:var(--agent-field-ink)]">Référence</TableHead>
+          <TableHead className="text-[color:var(--agent-field-ink)]">Allocataire</TableHead>
+          <TableHead className="text-[color:var(--agent-field-ink)]">Déposé le</TableHead>
+          {showWaitingDays && <TableHead className="text-[color:var(--agent-field-ink)]">Attente</TableHead>}
+          <TableHead className="text-[color:var(--agent-field-ink)]">Score</TableHead>
+          <TableHead className="text-[color:var(--agent-field-ink)]">Statut</TableHead>
           <TableHead>
             <span className="sr-only">Actions</span>
           </TableHead>
@@ -69,13 +69,22 @@ export function CaseQueueTable({
       <TableBody>
         {cases.map((item) => (
           <TableRow key={item.id}>
-            <TableCell className="text-label-md">{item.applicationNumber}</TableCell>
-            <TableCell>{citizenFullName(item.citizen)}</TableCell>
-            <TableCell className="text-on-surface-variant">
+            {/* Une seule encre pour les quatre colonnes de donnees : elles se
+                lisent ligne par ligne, pas colonne par colonne. Voir
+                `--agent-field-ink`. */}
+            <TableCell className="text-label-md text-[color:var(--agent-field-ink)]">
+              {item.applicationNumber}
+            </TableCell>
+            <TableCell className="text-[color:var(--agent-field-ink)]">
+              {citizenFullName(item.citizen)}
+            </TableCell>
+            <TableCell className="text-[color:var(--agent-field-ink)]">
               {formatDate(item.submittedAt)}
             </TableCell>
             {showWaitingDays && (
-              <TableCell className="text-on-surface-variant">{item.waitingDays} jours</TableCell>
+              <TableCell className="text-[color:var(--agent-field-ink)]">
+                {item.waitingDays} jours
+              </TableCell>
             )}
             <TableCell>
               <CaseScore score={item.score} />

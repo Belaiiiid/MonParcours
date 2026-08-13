@@ -122,8 +122,21 @@ function AssessmentView({ result }: { result: MonParcoursResult }) {
         />
       </div>
 
-      {/* Recommended human review actions */}
-      <div className="rounded-lg border-l-4 border-l-primary bg-primary-fixed/40 p-4">
+      {/*
+        Recommended human review actions.
+
+        Filet fin plutôt qu'une barre de 4px : la carte est désormais posée dans
+        l'étage « Ce que la machine a instruit », qui porte déjà l'unique barre
+        bleu IA de l'écran. Deux barres épaisses imbriquées annulent le marqueur
+        que la charte fait reposer sur sa rareté (DESIGN.md, « La Règle du Bleu
+        IA »).
+
+        Le fond passe de `bg-primary-fixed/40` à un jeton plein : le
+        modificateur d'opacité ne produisait aucune règle — les jetons portent
+        une couleur complète, pas des canaux — et ce bloc s'affichait donc sans
+        fond depuis le début.
+      */}
+      <div className="rounded-lg border border-border bg-ai-surface p-4">
         <p className="mb-2 flex items-center gap-2 text-label-md text-on-surface">
           <ListChecks className="size-4 shrink-0 text-primary" aria-hidden="true" />
           Actions de revue recommandées
@@ -150,9 +163,14 @@ function AssessmentView({ result }: { result: MonParcoursResult }) {
 export interface CaseAssessmentCardProps {
   /** The case id — its `entity_id` for the assessment endpoint. */
   caseId: string;
+  /**
+   * Drops to `h3` when the card sits inside a titled group, so the outline
+   * stays nested rather than flattening two levels onto `h2`.
+   */
+  headingLevel?: 'h2' | 'h3';
 }
 
-export function CaseAssessmentCard({ caseId }: CaseAssessmentCardProps) {
+export function CaseAssessmentCard({ caseId, headingLevel = 'h2' }: CaseAssessmentCardProps) {
   const resource = useCaseAssessment(caseId);
 
   return (
@@ -160,7 +178,7 @@ export function CaseAssessmentCard({ caseId }: CaseAssessmentCardProps) {
       <CardHeader>
         <SectionHeader
           title="Ad'Ministral Result"
-          as="h2"
+          as={headingLevel}
           action={
             <span className="flex items-center gap-1.5 text-label-sm text-on-surface-variant">
               <ShieldQuestion className="size-4" aria-hidden="true" />

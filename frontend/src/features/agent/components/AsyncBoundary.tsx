@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { EmptyState } from '@/components/shared';
+import type { EmptyStateProps } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import type { AsyncResource } from '@/features/agent/hooks';
 
@@ -11,7 +12,16 @@ export interface AsyncBoundaryProps<T> {
   /** Rendered while the request is in flight — usually a <Skeleton /> block. */
   fallback: React.ReactNode;
   /** Shown when the resolved value is empty. Omit if the value cannot be empty. */
-  empty?: { icon: LucideIcon; title: string; description?: string; actions?: React.ReactNode };
+  empty?: {
+    icon: LucideIcon;
+    title: string;
+    description?: string;
+    actions?: React.ReactNode;
+    /** Voir `EmptyStateProps.variant` — un vide qui est une bonne nouvelle se dit `accent`. */
+    variant?: EmptyStateProps['variant'];
+    /** Voir `EmptyStateProps.tone` — l'encre bleue des files d'instruction. */
+    tone?: EmptyStateProps['tone'];
+  };
   /** Treats a resolved value as empty. Defaults to "empty array". */
   isEmpty?: (data: T) => boolean;
   children: (data: T) => React.ReactNode;
@@ -68,6 +78,8 @@ export function AsyncBoundary<T>({
         title={empty.title}
         description={empty.description}
         actions={empty.actions}
+        variant={empty.variant}
+        tone={empty.tone}
       />
     );
   }

@@ -36,6 +36,14 @@ export interface ChatbotService {
    * call it only when signed in; an anonymous visitor has nothing to fetch.
    */
   getHistory(): Promise<ChatHistoryMessage[]>;
+
+  /**
+   * Efface le fil persisté du citoyen. `day` (AAAA-MM-JJ) restreint à une
+   * journée — l'unité que l'historique donne à relire.
+   *
+   * Définitif : le backend supprime les lignes, il ne les marque pas.
+   */
+  deleteHistory(day?: string): Promise<void>;
 }
 
 /**
@@ -75,4 +83,11 @@ export const httpChatbotService: ChatbotService = {
     }),
 
   getHistory: () => apiClient.get<ChatHistoryMessage[]>('/citizen/chatbot/history'),
+
+  deleteHistory: (day) =>
+    apiClient.delete<void>(
+      day
+        ? `/citizen/chatbot/history?day=${encodeURIComponent(day)}`
+        : '/citizen/chatbot/history',
+    ),
 };

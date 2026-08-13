@@ -20,6 +20,17 @@ class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, from_attributes=True)
 
 
+class PublicConfigResponse(CamelModel):
+    """Public runtime configuration served to the frontend.
+
+    Only non-secret values belong here. The Turnstile site key is public by
+    design — Cloudflare embeds it in the widget HTML anyway.
+    ``None`` means Turnstile is disabled (local development).
+    """
+
+    turnstile_site_key: str | None = None
+
+
 class RegisterRequest(CamelModel):
     """Public registration — CITIZEN only (enforced in the service)."""
 

@@ -32,33 +32,50 @@ export default function AgentProfilePage() {
       title="Mon profil"
       description="Les informations de votre compte agent."
     >
+      {/*
+        Une seule carte. La précédente version en posait deux : la première
+        affichait le nom et le rôle, la seconde les réaffichait en « Nom »,
+        « Prénom » et « Rôle » sous forme de champs. Un compte agent tient en
+        quatre valeurs — les répartir sur deux cartes ne créait pas une
+        hiérarchie, seulement un doublon.
+
+        `text-headline-md` : `text-title-md` et `text-headline-sm` n'existent
+        pas dans l'échelle typographique (tailwind.config.ts) et ne produisaient
+        donc aucune règle — les initiales et le nom de l'agent tombaient à la
+        taille du texte courant.
+      */}
       <Card>
-        <CardContent className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
-          <Avatar className="size-16 text-title-md">
-            <AvatarFallback>
-              {displayName ? getInitials(displayName) : <UserRound className="size-6" aria-hidden="true" />}
-            </AvatarFallback>
-          </Avatar>
+        <CardContent className="flex flex-col gap-6 p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <Avatar className="size-16 text-headline-md">
+              <AvatarFallback>
+                {displayName ? (
+                  getInitials(displayName)
+                ) : (
+                  <UserRound className="size-6" aria-hidden="true" />
+                )}
+              </AvatarFallback>
+            </Avatar>
 
-          <div className="min-w-0">
-            <h2 className="text-headline-sm text-on-surface">{displayName ?? '—'}</h2>
-            {roleLabel && (
-              <Badge tone="info" className="mt-2">
-                <ShieldCheck aria-hidden="true" />
-                {roleLabel}
-              </Badge>
-            )}
+            <div className="min-w-0">
+              <h2 className="text-headline-md text-on-surface">{displayName ?? '—'}</h2>
+              {roleLabel && (
+                <Badge tone="info" className="mt-2">
+                  <ShieldCheck aria-hidden="true" />
+                  {roleLabel}
+                </Badge>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="mt-gutter">
-        <CardContent className="p-6">
-          <dl className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+          <dl className="grid gap-x-6 gap-y-5 border-t border-border pt-6 sm:grid-cols-2">
             <Field label="Nom" value={user?.lastName} />
             <Field label="Prénom" value={user?.firstName} />
-            <Field label="Adresse e-mail" value={user?.email} icon={<Mail className="size-4 text-on-surface-variant" aria-hidden="true" />} />
-            <Field label="Rôle" value={roleLabel ?? undefined} />
+            <Field
+              label="Adresse e-mail"
+              value={user?.email}
+              icon={<Mail className="size-4 text-on-surface-variant" aria-hidden="true" />}
+            />
           </dl>
         </CardContent>
       </Card>
@@ -72,7 +89,14 @@ function Field({ label, value, icon }: { label: string; value?: string; icon?: R
       <dt className="mb-1 text-label-sm text-on-surface-variant">{label}</dt>
       <dd className="flex items-center gap-2 text-body-md text-on-surface">
         {icon}
-        {value || <span aria-hidden="true">—</span>}
+        {value || (
+          // Le tiret est annoncé, comme partout ailleurs dans le produit : muet,
+          // un lecteur d'écran passait sur un champ apparemment vide.
+          <>
+            <span aria-hidden="true">—</span>
+            <span className="sr-only">Non renseigné</span>
+          </>
+        )}
       </dd>
     </div>
   );

@@ -45,7 +45,15 @@ export default function ChatPage() {
     // de messages, dans `ChatWindow`.
     <div className="mx-auto flex h-full min-h-0 max-w-container flex-col">
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-3">
-        <ChatWindow controller={controller} fill />
+        {/* Le fond ne court pas sur toute la page : le panneau de contexte à
+            droite est fait de cartes blanches posées sur le gris de la coque,
+            et le dégradé derrière elles les aurait effacées. Il s'arrête donc
+            à la colonne de conversation, qui est la surface d'assistant. */}
+        <ChatWindow
+          controller={controller}
+          fill
+          className="assistant-backdrop rounded-2xl border border-border/60 px-5 py-4"
+        />
 
         {/* Context panel — fixe : il ne bouge pas quand le fil défile. Sur un
             écran trop court pour ses trois cartes, il défile pour lui-même

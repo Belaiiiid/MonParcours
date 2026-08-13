@@ -4,9 +4,10 @@ import { useLocation } from 'react-router-dom';
 import { APP_CONFIG } from '@/app/config/app';
 import { ROUTES } from '@/app/router/paths';
 import { useChatbotUiStore } from '@/features/chatbot/store/chatbotUiStore';
+import { useVoiceUiStore } from '@/features/voice/store/voiceUiStore';
 import { cn } from '@/lib/utils';
 
-interface BubbleSpec {
+export interface BubbleSpec {
   id?: string;
   label: string;
   iconSrc: string;
@@ -35,14 +36,29 @@ function useFinePointer() {
   return isFine;
 }
 
-function BubbleButton({
+/**
+ * Une bulle flottante. Exportee pour l'espace agent, qui n'affiche que le
+ * lanceur de l'assistant : partager le bouton plutot que le redessiner garde
+ * les deux au meme diametre, avec la meme mascotte, la meme infobulle et le
+ * meme grossissement au survol.
+ */
+export function BubbleButton({
   id,
   label,
   iconSrc,
   onClick,
   className,
   tooltip = 'left',
-}: BubbleSpec & { tooltip?: 'left' | 'above' }) {
+  size = 'size-14',
+}: BubbleSpec & {
+  tooltip?: 'left' | 'above';
+  /**
+   * Diametre de la bulle, en classe utilitaire. La pile de l'accueil en aligne
+   * trois et garde `size-14` ; l'espace agent n'en a qu'une, qui peut donc se
+   * permettre d'etre plus visible sans deseequilibrer une colonne.
+   */
+  size?: string;
+}) {
   return (
     <div className="group relative flex items-center">
       <button
@@ -51,7 +67,8 @@ function BubbleButton({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          'flex size-14 items-center justify-center rounded-full shadow-soft ring-1 ring-black/5 transition-transform duration-200 ease-out hover:scale-125 focus-visible:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
+          'flex items-center justify-center rounded-full shadow-soft ring-1 ring-black/5 transition-transform duration-200 ease-out hover:scale-125 focus-visible:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
+          size,
           className,
         )}
       >
@@ -218,6 +235,8 @@ export function FloatingActionBubbles({
   orbit?: boolean;
 }) {
   const isOpen = useChatbotUiStore((state) => state.isOpen);
+  const voiceOpen = useVoiceUiStore((s) => s.isOpen);
+  const openVoice = useVoiceUiStore((s) => s.open);
   const toggle = useChatbotUiStore((state) => state.toggle);
   const location = useLocation();
   const isFinePointer = useFinePointer();
@@ -228,9 +247,15 @@ export function FloatingActionBubbles({
   // la souris ou qu'on atteint au clavier ne doit pas se dérober.
   const [isEngaged, setIsEngaged] = useState(false);
 
-  if (hidden || isOpen || location.pathname === ROUTES.chat) return null;
+  if (hidden || isOpen || voiceOpen || location.pathname === ROUTES.chat) return null;
 
   const bubbles: BubbleSpec[] = [
+    {
+      label: 'Assistant vocal',
+      iconSrc: '/mic.svg',
+      onClick: openVoice,
+      className: 'bg-white text-white',
+    },
     {
       label: 'Discuter sur WhatsApp',
       iconSrc: '/whatsapp-logo.svg',

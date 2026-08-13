@@ -45,7 +45,10 @@ export default function CvCoachPage() {
       {/* Largeur bornée et centrée : une ligne de conversation qui court sur
           toute la largeur d'un grand écran est pénible à lire, et la barre de
           saisie s'y étire sans raison. */}
-      <CitizenCard className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col p-6">
+      {/* Le fond va sur la carte, pas sur la fenêtre : c'est la carte qui porte
+          le rembourrage, et un dégradé posé à l'intérieur aurait laissé un
+          liseré blanc de 24px tout autour. */}
+      <CitizenCard className="assistant-backdrop mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col p-6">
         <ChatWindow
           controller={controller}
           fill

@@ -9,19 +9,58 @@ import logo from '@/assets/administral-logo.png';
 const SCROLLED_LOGO = '/erasebg-transformed.png';
 import { cn } from '@/lib/utils';
 
+/**
+ * Ancres préfixées par `/` : cette barre coiffe aussi `/administrations` (voir
+ * `CitizenAppShell`, variante `landing`), où ces sections n'existent pas. Un
+ * `#services` nu n'y mènerait nulle part ; `/#services` ramène à l'accueil, à
+ * la bonne section, et se comporte exactement pareil depuis l'accueil.
+ */
 const NAV_LINKS = [
-  { href: '#services', label: 'Services' },
-  { href: '#fonctionnalites', label: 'Fonctionnalités' },
-  { href: '#ia', label: 'IA générative' },
-  { href: '#aide', label: 'Aide' },
+  // « Services » mène à la liste complète des administrations, pas au carrousel
+  // de la page d'accueil : celui-ci n'en montre que trois à la fois et le lien
+  // promettait plus qu'il ne donnait.
+  { to: ROUTES.administrations, label: 'Services' },
+  { href: '/#fonctionnalites', label: 'Fonctionnalités' },
+  { href: '/#ia', label: 'IA générative' },
+  { href: '/#aide', label: 'Aide' },
 ] as const;
+
+/** Classe commune aux entrées de la barre, lien interne ou ancre. */
+const NAV_LINK_CLASS =
+  'group relative rounded-sm px-3 py-2 text-label-md text-foreground/70 transition-colors hover:text-brand';
+
+/** La même entrée, dans le tiroir mobile. */
+const MOBILE_NAV_LINK_CLASS =
+  'rounded-sm px-4 py-3 text-label-md text-foreground/80 transition-colors hover:bg-brand-soft hover:text-brand';
+
+/** Le soulignement qui pousse depuis le centre au survol. */
+function NavUnderline() {
+  return (
+    <span
+      className="absolute inset-x-3 bottom-1 h-0.5 origin-center scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100"
+      aria-hidden="true"
+    />
+  );
+}
+
+export interface LandingHeaderProps {
+  /**
+   * Intercepte le clic sur la marque, au lieu de laisser le lien vers
+   * l'accueil s'en charger.
+   *
+   * L'accueil public rend l'assistant *à la place* de la page, sans changer
+   * d'URL : le lien vers `/` y est un clic mort, puisqu'on y est déjà. Cette
+   * échappatoire rend au logo son rôle attendu — revenir à la page d'accueil.
+   */
+  onBrandClick?: () => void;
+}
 
 /**
  * Administral-styled public header — structural twin of the reference
  * design-to-code `Header`, adapted to `react-router-dom` and to a real "Se
  * connecter" destination.
  */
-export function LandingHeader() {
+export function LandingHeader({ onBrandClick }: LandingHeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -52,7 +91,17 @@ export function LandingHeader() {
           scrolled ? 'h-14' : 'h-16',
         )}
       >
-        <Link to={ROUTES.home} className="flex items-center gap-3">
+        <Link
+          to={ROUTES.home}
+          onClick={(event) => {
+            if (!onBrandClick) return;
+            // `preventDefault` : la navigation vers `/` depuis `/` ne
+            // remonterait rien à l'écran, c'est `onBrandClick` qui referme.
+            event.preventDefault();
+            onBrandClick();
+          }}
+          className="flex items-center gap-3"
+        >
           <img
             src={scrolled ? SCROLLED_LOGO : logo}
             alt="Administral"
@@ -72,21 +121,19 @@ export function LandingHeader() {
         </Link>
 
         <nav className="hidden items-center gap-2 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="group relative rounded-sm px-3 py-2 text-label-md text-foreground/70 transition-colors hover:text-brand"
-            >
-              {link.label}
-              {/* Underline grows from the centre — gives the links a hover state
-                  beyond a colour change, matching the rest of the page. */}
-              <span
-                className="absolute inset-x-3 bottom-1 h-0.5 origin-center scale-x-0 rounded-full bg-brand transition-transform duration-300 group-hover:scale-x-100"
-                aria-hidden="true"
-              />
-            </a>
-          ))}
+          {NAV_LINKS.map((link) =>
+            'to' in link ? (
+              <Link key={link.label} to={link.to} className={NAV_LINK_CLASS}>
+                {link.label}
+                <NavUnderline />
+              </Link>
+            ) : (
+              <a key={link.label} href={link.href} className={NAV_LINK_CLASS}>
+                {link.label}
+                <NavUnderline />
+              </a>
+            ),
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -116,16 +163,27 @@ export function LandingHeader() {
           aria-label="Navigation principale"
           className="flex flex-col gap-1 border-t border-border/60 bg-background p-4 lg:hidden"
         >
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="rounded-sm px-4 py-3 text-label-md text-foreground/80 transition-colors hover:bg-brand-soft hover:text-brand"
-            >
-              {link.label}
-            </a>
-          ))}
+          {NAV_LINKS.map((link) =>
+            'to' in link ? (
+              <Link
+                key={link.label}
+                to={link.to}
+                onClick={() => setMenuOpen(false)}
+                className={MOBILE_NAV_LINK_CLASS}
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className={MOBILE_NAV_LINK_CLASS}
+              >
+                {link.label}
+              </a>
+            ),
+          )}
           <Link
             to={ROUTES.login}
             onClick={() => setMenuOpen(false)}

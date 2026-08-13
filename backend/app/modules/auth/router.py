@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.captcha import verify_turnstile
+from app.core.config import settings
 from app.database.session import get_db
 from app.modules.auth import service
 from app.modules.auth.dependencies import get_current_user, require_admin
@@ -16,6 +17,7 @@ from app.modules.auth.schemas import (
     LoginRequest,
     MessageResponse,
     ProvisionStaffRequest,
+    PublicConfigResponse,
     RegisterRequest,
     RequestPasswordResetRequest,
     ResetPasswordRequest,
@@ -25,6 +27,21 @@ from app.modules.auth.schemas import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.get(
+    "/config",
+    response_model=PublicConfigResponse,
+    summary="Configuration publique (clé Turnstile, etc.)",
+)
+def public_config() -> PublicConfigResponse:
+    """Returns public runtime configuration for the frontend.
+
+    The Turnstile site key is public by design (it is embedded in the browser
+    anyway); serving it from the backend means only ``backend/.env`` needs to
+    be configured — no ``frontend/.env`` required.
+    """
+    return PublicConfigResponse(turnstile_site_key=settings.turnstile_site_key)
 
 
 @router.post(

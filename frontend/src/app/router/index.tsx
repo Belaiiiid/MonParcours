@@ -1,5 +1,11 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  RouterProvider,
+  ScrollRestoration,
+} from 'react-router-dom';
 
 import { ProtectedRoute } from '@/app/router/ProtectedRoute';
 import { RequireApplProfile } from '@/app/router/RequireApplProfile';
@@ -64,7 +70,24 @@ function HomeRoute() {
   return user ? <Navigate to={ROUTES.administrations} replace /> : <PublicLandingPage />;
 }
 
-const router = createBrowserRouter([
+/**
+ * Racine de toutes les routes — n'existe que pour `ScrollRestoration`.
+ *
+ * Sans lui, une navigation côté client garde la position de défilement de la
+ * page qu'on quitte : partir du bas de l'accueil (« Voir tous les services »)
+ * ouvrait `/administrations` au ras du pied de page. `ScrollRestoration` remet
+ * en haut sur une navigation neuve et rend sa position à un retour arrière.
+ */
+function RootLayout() {
+  return (
+    <>
+      <ScrollRestoration />
+      <Outlet />
+    </>
+  );
+}
+
+const routes = [
   { path: ROUTES.home, element: <HomeRoute /> },
   {
     // Entry journey — no application chrome.
@@ -104,7 +127,10 @@ const router = createBrowserRouter([
     // Administral redesign: `CitizenAppShell` (not `AppShell`) — see
     // src/index.css `.citizen-scope`. Kept off the agent back-office, which
     // still renders through `AppShell` below.
-    element: <CitizenAppShell variant="minimal" />,
+    // Coiffées de l'en-tête public tant qu'aucune session n'est ouverte : ces
+    // deux pages se parcourent sans compte et prolongent la page d'accueil.
+    // Une fois connecté, `CitizenAppShell` rend l'en-tête citoyen à leur place.
+    element: <CitizenAppShell variant="landing" />,
     children: [
       { path: ROUTES.administrations, element: <AdministrationsPage /> },
       { path: ROUTES.portal, element: <CitizenDashboardPage /> },
@@ -182,7 +208,9 @@ const router = createBrowserRouter([
     ],
   },
   { path: ROUTES.notFound, element: <NotFoundPage /> },
-]);
+];
+
+const router = createBrowserRouter([{ element: <RootLayout />, children: routes }]);
 
 export function AppRouter() {
   return (

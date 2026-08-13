@@ -11,6 +11,12 @@ import {
 export interface CaseProfileCardProps {
   citizen: CaseCitizen;
   profile: CaseProfileSnapshot;
+  /**
+   * Drops to `h3` when the card sits inside a titled group, so the outline
+   * stays nested rather than flattening two levels onto `h2`. The three inner
+   * sub-headings follow one level below.
+   */
+  headingLevel?: 'h2' | 'h3';
 }
 
 /**
@@ -23,17 +29,22 @@ export interface CaseProfileCardProps {
  * The NIR arrives already masked from the backend; the frontend never holds the
  * full number, so there is nothing to redact here.
  */
-export function CaseProfileCard({ citizen, profile }: CaseProfileCardProps) {
+export function CaseProfileCard({
+  citizen,
+  profile,
+  headingLevel = 'h2',
+}: CaseProfileCardProps) {
   const { household, housing } = profile;
+  const SubHeading = headingLevel === 'h3' ? 'h4' : 'h3';
 
   return (
     <Card>
       <CardHeader>
-        <SectionHeader title="Allocataire et situation déclarée" as="h2" />
+        <SectionHeader title="Allocataire et situation déclarée" as={headingLevel} />
       </CardHeader>
       <CardContent className="grid gap-gutter md:grid-cols-2">
         <div>
-          <h3 className="section-title mb-2">Identité</h3>
+          <SubHeading className="section-title mb-2">Identité</SubHeading>
           <DataRow label="Nom" value={citizenFullName(citizen)} />
           <DataRow label="Date de naissance" value={formatDate(citizen.birthDate)} />
           <DataRow label="Numéro de sécurité sociale" value={citizen.maskedSocialSecurityNumber} />
@@ -41,7 +52,7 @@ export function CaseProfileCard({ citizen, profile }: CaseProfileCardProps) {
         </div>
 
         <div>
-          <h3 className="section-title mb-2">Foyer</h3>
+          <SubHeading className="section-title mb-2">Foyer</SubHeading>
           <DataRow
             label="Situation familiale"
             value={HOUSEHOLD_STATUS_LABEL[household.maritalStatus]}
@@ -52,7 +63,7 @@ export function CaseProfileCard({ citizen, profile }: CaseProfileCardProps) {
         </div>
 
         <div className="md:col-span-2">
-          <h3 className="section-title mb-2">Logement</h3>
+          <SubHeading className="section-title mb-2">Logement</SubHeading>
           <div className="grid gap-x-gutter md:grid-cols-2">
             <DataRow
               label="Statut d’occupation"

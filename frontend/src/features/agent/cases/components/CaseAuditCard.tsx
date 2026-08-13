@@ -77,9 +77,14 @@ function AuditRow({ event }: { event: AuditEvent }) {
 export interface CaseAuditCardProps {
   /** The dossier reference — its `entity_id` in the trail. */
   applicationNumber: string;
+  /**
+   * Drops to `h3` when the card sits inside a titled group, so the outline
+   * stays nested rather than flattening two levels onto `h2`.
+   */
+  headingLevel?: 'h2' | 'h3';
 }
 
-export function CaseAuditCard({ applicationNumber }: CaseAuditCardProps) {
+export function CaseAuditCard({ applicationNumber, headingLevel = 'h2' }: CaseAuditCardProps) {
   const resource = useCaseAuditTrail(applicationNumber);
   const trail = resource.data;
 
@@ -88,7 +93,7 @@ export function CaseAuditCard({ applicationNumber }: CaseAuditCardProps) {
       <CardHeader>
         <SectionHeader
           title="Journal d’audit"
-          as="h2"
+          as={headingLevel}
           action={
             trail &&
             (trail.chainIntact ? (

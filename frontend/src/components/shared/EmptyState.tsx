@@ -11,8 +11,18 @@ export interface EmptyStateProps {
   /**
    * `plain` — neutral placeholder (notification centre).
    * `suggestive` — dashed container inviting an action (dashboard).
+   * `accent` — pastille bleu pâle, pictogramme au bleu d'action : un vide qui
+   *   est une bonne nouvelle (file d'instruction à jour) plutôt qu'un manque.
+   *   Le cercle gris bordé de `plain` annonce l'inverse.
    */
-  variant?: 'plain' | 'suggestive';
+  variant?: 'plain' | 'suggestive' | 'accent';
+  /**
+   * `institutional` — titre, texte et pictogramme dans l'encre bleue des files
+   * d'instruction (`--agent-field-ink`), plutot que le quasi-noir et le gris du
+   * ton par defaut. Le vide y est un etat du travail, pas un incident : il se
+   * dit dans la couleur de ce que le tableau aurait affiche.
+   */
+  tone?: 'default' | 'institutional';
   /**
    * `default` — page- or section-level placeholder.
    * `compact` — fits inside an existing card body without breaking its rhythm.
@@ -27,10 +37,13 @@ export function EmptyState({
   description,
   actions,
   variant = 'plain',
+  tone = 'default',
   size = 'default',
   className,
 }: EmptyStateProps) {
   const isCompact = size === 'compact';
+  const institutional = tone === 'institutional';
+  const ink = institutional ? 'text-[color:var(--agent-field-ink)]' : undefined;
 
   return (
     <div
@@ -44,15 +57,23 @@ export function EmptyState({
       <div
         className={cn(
           'flex items-center justify-center rounded-full',
-          isCompact ? 'mb-3 size-11' : 'mb-4 size-16',
-          variant === 'suggestive'
-            ? 'bg-surface-lowest text-primary shadow-soft'
-            : 'border border-border text-on-surface-variant',
+          isCompact ? 'mb-3 size-11' : 'mb-5 size-16',
+          variant === 'suggestive' && 'bg-surface-lowest text-primary shadow-soft',
+          variant === 'accent' && 'bg-ai-container text-ai',
+          variant === 'plain' && 'border border-border text-on-surface-variant',
+          // Pose apres les variantes : c'est le ton qui tranche sur la couleur
+          // du pictogramme, la variante ne decide plus que du fond.
+          ink,
         )}
       >
         <Icon className={isCompact ? 'size-5' : 'size-7'} aria-hidden="true" />
       </div>
-      <h3 className={isCompact ? 'text-label-md text-on-surface' : 'text-headline-md text-on-surface'}>
+      <h3
+        className={cn(
+          isCompact ? 'text-label-md text-on-surface' : 'text-headline-md text-on-surface',
+          ink,
+        )}
+      >
         {title}
       </h3>
       {description && (
@@ -60,6 +81,7 @@ export function EmptyState({
           className={cn(
             'mt-2 max-w-md text-on-surface-variant',
             isCompact ? 'text-body-sm' : 'text-body-md',
+            ink,
           )}
         >
           {description}

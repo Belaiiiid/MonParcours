@@ -10,6 +10,7 @@ import {
   IdCard,
   Landmark,
   Lock,
+  MessageCircle,
   PiggyBank,
   Receipt,
   Tractor,
@@ -17,6 +18,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { useChatbotUiStore } from '@/features/chatbot/store/chatbotUiStore';
 import { cn } from '@/lib/utils';
 import type { AdministrationId, ServiceDefinition } from '@/types';
 
@@ -83,13 +85,18 @@ const SIZES: Record<ServiceCardSize, SizeTokens> = {
     logo: 'max-h-28 max-w-[70%]',
   },
   compact: {
-    panel: 'h-36',
+    // La vignette porte l'identité du service : elle gagne la hauteur, le reste
+    // de la carte est inchangé. Les illustrations sont cadrées large, avec de
+    // la marge autour du sujet — sous 15rem, `object-cover` rognait les têtes.
+    panel: 'h-64',
     badge: 'size-12',
     badgeIcon: 'size-5',
-    body: 'p-5 pt-7',
+    // Le corps rend à la vignette la place qu'il n'utilise pas : le badge garde
+    // l'air qu'il lui faut en haut, le reste se resserre.
+    body: 'p-4 pt-8',
     name: 'text-base',
-    description: 'mt-2 line-clamp-3 text-sm',
-    cta: 'py-2.5 text-sm',
+    description: 'mt-1.5 line-clamp-2 text-sm',
+    cta: 'py-2 text-sm',
     logo: 'max-h-20 max-w-[76%]',
   },
 };
@@ -141,16 +148,17 @@ export function ServiceCard({
   className,
 }: ServiceCardProps) {
   const s = SIZES[size];
+  const askAssistant = useChatbotUiStore((state) => state.ask);
 
   return (
     <article
       className={cn(
         'group/card relative flex h-full flex-col overflow-hidden rounded-sm border-2 border-border/60 bg-card shadow-soft',
         'transition-all duration-300 ease-out',
-        // Siblings recede while any card in the group is hovered…
-        'group-hover/cards:scale-[0.97] group-hover/cards:opacity-50',
-        // …and the hovered one wins both back, plus a brand border.
-        'hover:!scale-[1.03] hover:!opacity-100 hover:border-brand hover:shadow-soft-hover hover:shadow-brand/10',
+        // La carte survolée avance ; ses voisines ne bougent plus. Elles
+        // s'effaçaient auparavant (`group-hover/cards`), ce qui faisait
+        // clignoter toute la grille au moindre passage de souris.
+        'hover:scale-[1.03] hover:border-brand hover:shadow-soft-hover hover:shadow-brand/10',
         // Keyboard parity: the CTA is the focus target, so the card reacts to
         // focus *within* it rather than only to a mouse.
         'focus-within:border-brand focus-within:shadow-soft',
@@ -233,14 +241,19 @@ export function ServiceCard({
           {description}
         </p>
 
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex items-center justify-center gap-2">
           {available ? (
+            <>
             <Link
               to={to}
               className={cn(
                 'inline-flex items-center justify-center gap-2 rounded-sm bg-brand font-semibold text-white shadow-soft',
                 CTA_WIDTHS[size],
-                'transition-colors duration-200 hover:bg-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
+                // `#102a74` et non `ink` : la zone de clic du bouton couvre
+                // toute la carte (`after:inset-0`), donc survoler la carte
+                // survole le bouton. Le presque-noir d'`ink` faisait virer le
+                // bouton au sombre au moindre passage de souris.
+                'transition-colors duration-200 hover:bg-[#102a74] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
                 // Stretches the hit area over the whole card — see the component note.
                 'after:absolute after:inset-0 after:content-[""]',
                 s.cta,
@@ -249,6 +262,33 @@ export function ServiceCard({
               {ctaLabel}
               <ArrowRight className="size-4 shrink-0 transition-transform duration-200 group-hover/card:translate-x-1" aria-hidden="true" />
             </Link>
+
+            {/* Second chemin vers ce service : demander plutôt qu'ouvrir.
+                Réservé aux services ouverts — sur un service fermé, l'assistant
+                n'aurait rien à raconter d'autre que « pas encore disponible »,
+                que le bouton dit déjà.
+
+                `relative z-10` obligatoire : la zone de clic du bouton principal
+                couvre toute la carte (`after:inset-0`) et passerait par-dessus
+                celle-ci. `shrink-0` garde la pastille carrée face au bouton
+                pleine largeur du gabarit `compact`. */}
+            <button
+              type="button"
+              onClick={() => askAssistant(`Parlez-moi de ${name} et de ce que je peux y faire.`)}
+              aria-label={`Poser une question sur ${name} à l’assistant`}
+              className={cn(
+                'relative z-10 inline-flex shrink-0 items-center justify-center rounded-sm border border-brand/25 bg-brand-soft text-brand',
+                'transition-colors duration-200 hover:border-brand/50 hover:bg-brand hover:text-white',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2',
+                // Carré fixe plutôt que la hauteur du bouton principal : à
+                // `aspect-square` sur `s.cta`, la pastille tombait sous les
+                // 40 px et se lisait comme une décoration, pas comme une cible.
+                size === 'compact' ? 'size-11' : 'size-12',
+              )}
+            >
+              <MessageCircle className="size-5 shrink-0" aria-hidden="true" />
+            </button>
+            </>
           ) : (
             <span
               className={cn(

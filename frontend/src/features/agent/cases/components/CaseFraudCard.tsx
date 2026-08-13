@@ -9,6 +9,11 @@ import { fraudRiskTone } from '@/features/agent/lib/casePresentation';
 
 export interface CaseFraudCardProps {
   documents: CaseDocument[];
+  /**
+   * Drops to `h3` when the card sits inside a titled group, so the outline
+   * stays nested rather than flattening two levels onto `h2`.
+   */
+  headingLevel?: 'h2' | 'h3';
 }
 
 const detectorLabel: Record<string, string> = {
@@ -33,7 +38,7 @@ const detectorLabel: Record<string, string> = {
  * Only documents the pipeline actually analysed appear; a case with no forensic
  * data renders the reassuring empty state rather than a blank panel.
  */
-export function CaseFraudCard({ documents }: CaseFraudCardProps) {
+export function CaseFraudCard({ documents, headingLevel = 'h2' }: CaseFraudCardProps) {
   const analysed = documents.filter((doc) => doc.fraudAnalysis);
   const flagged = analysed.filter((doc) => doc.fraudAnalysis?.aDesSignaux);
 
@@ -42,7 +47,7 @@ export function CaseFraudCard({ documents }: CaseFraudCardProps) {
       <CardHeader>
         <SectionHeader
           title="Authenticité des pièces"
-          as="h2"
+          as={headingLevel}
           action={
             analysed.length > 0 ? (
               <Badge tone={flagged.length > 0 ? 'warning' : 'success'}>

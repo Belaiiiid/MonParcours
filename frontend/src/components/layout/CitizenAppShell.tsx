@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { ROUTES } from '@/app/router/paths';
 import { CitizenFooter } from '@/components/layout/CitizenFooter';
@@ -9,9 +9,12 @@ import { SkipLink } from '@/components/layout/SkipLink';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FloatingActionBubbles } from '@/features/chatbot/components/FloatingActionBubbles';
 import { FloatingChatbot } from '@/features/chatbot/components/FloatingChatbot';
+import { LandingHeader } from '@/features/chatbot/components/landing/LandingHeader';
 import { VoiceAssistantProvider } from '@/features/voice/components/VoiceAssistantProvider';
+import { VoiceAssistantPanel } from '@/features/voice/components/VoiceAssistantPanel';
 import { VoicePageProvider } from '@/features/voice/context/VoicePageContext';
 import { cn } from '@/lib/utils';
+import { useSessionStore } from '@/store/sessionStore';
 
 /**
  * Administral-styled application shell — the citizen area only.
@@ -22,15 +25,32 @@ import { cn } from '@/lib/utils';
  * back-office shell, which still uses `AppShell` for its own routes, is
  * never affected by this redesign.
  *
- * `variant="minimal"` drops the header and sidebar, for the administrations
- * list and the CAF services hub, reached before any account is required —
- * mirrors `AppShell`'s `hideSidebar`/`hideHeader` props.
+ * `variant="minimal"` drops the sidebar, for the CAF services hub, reached
+ * before any account is required — mirrors `AppShell`'s `hideSidebar`/
+ * `hideHeader` props.
+ *
+ * `variant="landing"` fait la même chose mais coiffe la page de l'en-tête
+ * public (`LandingHeader`) : la liste des administrations se parcourt sans
+ * compte, elle prolonge la page d'accueil plutôt que l'espace connecté, et
+ * changer de barre entre les deux se lisait comme un changement de site.
+ *
+ * Une fois la session ouverte, cette même page reprend l'en-tête de l'espace
+ * citoyen : la barre publique y proposerait « Se connecter » à quelqu'un qui
+ * l'est déjà, et lui retirerait ses notifications et son menu de compte.
  */
-export function CitizenAppShell({ variant = 'full' }: { variant?: 'full' | 'minimal' }) {
+export function CitizenAppShell({
+  variant = 'full',
+}: {
+  variant?: 'full' | 'minimal' | 'landing';
+}) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const hideChrome = variant === 'minimal';
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const role = useSessionStore((state) => state.role);
+  // La barre publique ne coiffe la page que pour un visiteur sans session.
+  const isLanding = variant === 'landing' && !isAuthenticated;
+  const hideChrome = variant === 'minimal' || variant === 'landing';
   /*
    * L'assistant est une surface de conversation, pas un document : la page y
    * tient exactement dans l'écran, et le seul ascenseur est celui du fil de
@@ -42,6 +62,28 @@ export function CitizenAppShell({ variant = 'full' }: { variant?: 'full' | 'mini
    */
   const isConversationRoute =
     location.pathname === ROUTES.chat || location.pathname === ROUTES.franceTravailCvCoach;
+
+  /*
+   * Un agent connecté n'a rien à faire dans l'espace citoyen.
+   *
+   * Toutes les surfaces citoyennes passent par cette coque — dossier, suivi,
+   * assistant, profil, mais aussi la liste des administrations et le hub CAF,
+   * qui n'ont pas de `ProtectedRoute` puisqu'ils se parcourent sans compte.
+   * Le verrou est donc posé ici, en un seul endroit, plutôt que route par
+   * route où le premier ajout oublierait de le reprendre.
+   *
+   * Le contrôle porte sur le rôle de la session, pas sur le chemin : la même
+   * adresse reste ouverte à un visiteur sans compte et à un citoyen.
+   *
+   * `admin` suit `agent` — `sessionStore.toSessionRole` les range ensemble
+   * pour l'accès au back-office.
+   *
+   * `replace` : la page interdite ne doit pas rester dans l'historique, sinon
+   * le bouton Retour du navigateur y ramène en boucle.
+   */
+  if (isAuthenticated && (role === 'agent' || role === 'admin')) {
+    return <Navigate to={ROUTES.agent} replace />;
+  }
 
   return (
     <VoicePageProvider>
@@ -78,10 +120,14 @@ export function CitizenAppShell({ variant = 'full' }: { variant?: 'full' | 'mini
               !hideChrome && 'lg:pl-sidebar',
             )}
           >
-            <CitizenHeader
-              variant={hideChrome ? 'minimal' : 'full'}
-              onOpenMenu={() => setIsDrawerOpen(true)}
-            />
+            {isLanding ? (
+              <LandingHeader />
+            ) : (
+              <CitizenHeader
+                variant={hideChrome ? 'minimal' : 'full'}
+                onOpenMenu={() => setIsDrawerOpen(true)}
+              />
+            )}
             <main
               id="main-content"
               tabIndex={-1}
@@ -97,6 +143,8 @@ export function CitizenAppShell({ variant = 'full' }: { variant?: 'full' | 'mini
 
           <FloatingChatbot />
           <FloatingActionBubbles />
+          {/* Standalone voice UI for citizen */}
+          <VoiceAssistantPanel />
         </div>
       </VoiceAssistantProvider>
     </VoicePageProvider>

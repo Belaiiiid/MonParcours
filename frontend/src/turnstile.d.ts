@@ -12,7 +12,8 @@ interface TurnstileRenderOptions {
   size?: 'normal' | 'compact';
   callback?: (token: string) => void;
   'expired-callback'?: () => void;
-  'error-callback'?: () => void;
+  /** Reçoit le code d'erreur Cloudflare (110200 = domaine inconnu de la clé, etc.). */
+  'error-callback'?: (code?: string) => void;
 }
 
 interface TurnstileInstance {

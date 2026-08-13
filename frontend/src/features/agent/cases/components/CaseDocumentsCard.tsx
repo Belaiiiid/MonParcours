@@ -23,6 +23,11 @@ export interface CaseDocumentsCardProps {
    * "Consulter" action then does not render, rather than failing on click.
    */
   caseId?: string;
+  /**
+   * Drops to `h3` when the card sits inside a titled group, so the outline
+   * stays nested rather than flattening two levels onto `h2`.
+   */
+  headingLevel?: 'h2' | 'h3';
 }
 
 /**
@@ -33,7 +38,11 @@ export interface CaseDocumentsCardProps {
  * triggered from here. Opening a piece is likewise read-only: the agent sees
  * the same bytes the pipeline saw, and the dossier is unchanged by the reading.
  */
-export function CaseDocumentsCard({ documents, caseId }: CaseDocumentsCardProps) {
+export function CaseDocumentsCard({
+  documents,
+  caseId,
+  headingLevel = 'h2',
+}: CaseDocumentsCardProps) {
   /*
    * The open piece, held here rather than in the viewer: one dialog is mounted
    * for the whole list, so switching from one document to the next swaps the
@@ -44,7 +53,10 @@ export function CaseDocumentsCard({ documents, caseId }: CaseDocumentsCardProps)
   return (
     <Card>
       <CardHeader>
-        <SectionHeader title={`Pièces justificatives (${documents.length})`} as="h2" />
+        <SectionHeader
+          title={`Pièces justificatives (${documents.length})`}
+          as={headingLevel}
+        />
       </CardHeader>
       <CardContent className={documents.length === 0 ? 'px-0' : undefined}>
         {documents.length === 0 ? (

@@ -190,7 +190,7 @@ export default function JobSearchPage() {
           Recherche d’offres
         </span>
         <h1 className="mt-4 font-display text-headline-lg-mobile font-bold leading-tight text-[#102a74] sm:text-4xl">
-          Les offres qui correspondent vraiment à votre profil.
+          Les offres qui correspondent vraiment à votre profil
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Décrivez ce que vous cherchez en une phrase — métier, ville, tout autre détail — et
