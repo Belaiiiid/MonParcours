@@ -97,7 +97,13 @@
       "WebFetch(domain:mistral.ai)",
       "WebFetch(domain:docs.mistral.ai)",
       "Bash(git commit *)",
-      "Bash(echo \"COMMIT_EXIT=$?\")"
+      "Bash(echo \"COMMIT_EXIT=$?\")",
+      "Bash(git push *)",
+      "Bash(echo \"PUSH_EXIT=$?\")",
+      "Bash(echo \"FF_EXIT=$?\")",
+      "Bash(git merge *)",
+      "Bash(echo \"MERGE_EXIT=$?\")",
+      "Bash(git add *)"
     ]
   }
 }
